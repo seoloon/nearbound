@@ -58,6 +58,10 @@ app.post("/api/livekit-token", async (req, res) => {
     typeof req.body?.color === "string" && /^#[0-9a-fA-F]{6}$/.test(req.body.color)
       ? req.body.color
       : "#2fbf71";
+  const avatar =
+    req.body?.avatar && typeof req.body.avatar === "object" && !Array.isArray(req.body.avatar)
+      ? req.body.avatar
+      : undefined;
 
   try {
     const token = new AccessToken(
@@ -66,7 +70,7 @@ app.post("/api/livekit-token", async (req, res) => {
       {
         identity,
         name,
-        metadata: JSON.stringify({ color })
+        metadata: JSON.stringify({ color, avatar })
       }
     );
 

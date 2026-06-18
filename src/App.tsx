@@ -3,6 +3,7 @@ import { ChatPanel } from "./components/ChatPanel";
 import { ControlsBar } from "./components/ControlsBar";
 import { LoginScreen } from "./components/LoginScreen";
 import { LocalScreenPreview } from "./components/ScreenPreview";
+import { avatarAccent } from "./avatar";
 import { WorldCanvas } from "./components/WorldCanvas";
 import { createOfficeMap, getZoneAt } from "./game/map";
 import { useLiveKitRoom } from "./livekit/useLiveKitRoom";
@@ -45,7 +46,8 @@ export function App() {
       setLocal({
         identity: nextSession.identity,
         name: nextSession.name,
-        color: nextSession.color,
+        color: nextSession.color || avatarAccent(nextSession.avatar),
+        avatar: nextSession.avatar,
         status: "available",
         bio: "",
         x: spawn.x,

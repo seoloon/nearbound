@@ -1,8 +1,8 @@
 import { Camera, CameraOff, Headphones, Mic, MicOff, MonitorUp, ScreenShareOff, VolumeX } from "lucide-react";
-import type { CSSProperties } from "react";
 import { useState } from "react";
 import type { PlayerPresence, UserStatus } from "../types";
 import { IconButton } from "./IconButton";
+import { PixelAvatar } from "./PixelAvatar";
 
 interface ControlsBarProps {
   connected: boolean;
@@ -59,7 +59,7 @@ export function ControlsBar({
           aria-expanded={expanded}
           title="Profile"
         >
-          <Avatar color={profile.color} status={profile.status} />
+          <Avatar profile={profile} />
           <span>
             <strong>{profile.name}</strong>
             <small>{STATUS_LABELS[profile.status]}</small>
@@ -98,7 +98,7 @@ function ProfilePopover({
   return (
     <section className="profile-popover">
       <div className="profile-hero">
-        <Avatar color={profile.color} status={profile.status} large />
+        <Avatar profile={profile} large />
         <div>
           <h2>{profile.name}</h2>
           <p>{preview ? "Local preview" : connected ? "Connected" : "Connecting"}</p>
@@ -130,10 +130,6 @@ function ProfilePopover({
   );
 }
 
-function Avatar({ color, status, large = false }: { color: string; status: UserStatus; large?: boolean }) {
-  return (
-    <span className={`dock-avatar ${large ? "is-large" : ""}`} style={{ "--avatar-color": color } as CSSProperties}>
-      <i className={`status-dot is-${status}`} />
-    </span>
-  );
+function Avatar({ profile, large = false }: { profile: PlayerPresence; large?: boolean }) {
+  return <PixelAvatar avatar={profile.avatar} status={profile.status} size={large ? "large" : "small"} />;
 }

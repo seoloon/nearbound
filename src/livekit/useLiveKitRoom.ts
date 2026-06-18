@@ -6,7 +6,8 @@ import {
   Track
 } from "livekit-client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ChatMessage, LiveKitTokenResponse, PlayerPresence, Session, UserStatus } from "../types";
+import { normalizeAvatarStyle } from "../avatar";
+import type { AvatarStyle, ChatMessage, LiveKitTokenResponse, PlayerPresence, Session, UserStatus } from "../types";
 import { getAudibility, type OfficeMap, TILE } from "../game/map";
 
 type ConnectionStatus = "preview" | "connecting" | "connected" | "error";
@@ -23,6 +24,7 @@ interface PresencePacket {
   identity: string;
   name: string;
   color: string;
+  avatar?: AvatarStyle;
   status: UserStatus;
   bio: string;
   x: number;
@@ -143,6 +145,7 @@ export function useLiveKitRoom(
             identity: participant.identity,
             name: packet.name || participant.name || participant.identity,
             color: packet.color || readColor(participant),
+            avatar: normalizeAvatarStyle(packet.avatar, packet.color || readColor(participant)),
             status: packet.status || "available",
             bio: packet.bio || "",
             x: packet.x,
@@ -180,6 +183,7 @@ export function useLiveKitRoom(
             identity: currentSession.identity,
             name: currentSession.name,
             color: currentSession.color,
+            avatar: currentSession.avatar,
             room: currentSession.room
           })
         });
@@ -339,6 +343,7 @@ function publishPresence(room: Room, local: PlayerPresence | null, reliable: boo
     identity: local.identity,
     name: local.name,
     color: local.color,
+    avatar: local.avatar,
     status: local.status,
     bio: local.bio,
     x: Math.round(local.x),
@@ -365,8 +370,8 @@ function isMediaPublication(publication: RemoteTrackPublication) {
 
 function readColor(participant: RemoteParticipant) {
   try {
-    const metadata = JSON.parse(participant.metadata || "{}") as { color?: string };
-    return metadata.color || "#2fbf71";
+    const metadata = JSON.parse(participant.metadata || "{}") as { color?: string; avatar?: AvatarStyle };
+    return metadata.color || normalizeAvatarStyle(metadata.avatar).topColor;
   } catch {
     return "#2fbf71";
   }
@@ -374,14 +379,22 @@ function readColor(participant: RemoteParticipant) {
 
 function readProfile(participant: RemoteParticipant) {
   try {
-    const metadata = JSON.parse(participant.metadata || "{}") as { color?: string; status?: UserStatus; bio?: string };
+    const metadata = JSON.parse(participant.metadata || "{}") as {
+      color?: string;
+      avatar?: AvatarStyle;
+      status?: UserStatus;
+      bio?: string;
+    };
+    const avatar = normalizeAvatarStyle(metadata.avatar, metadata.color);
     return {
-      color: metadata.color || "#2fbf71",
+      color: metadata.color || avatar.topColor,
+      avatar,
       status: metadata.status || "available",
       bio: metadata.bio || ""
     };
   } catch {
-    return { color: "#2fbf71", status: "available" as UserStatus, bio: "" };
+    const avatar = normalizeAvatarStyle(undefined);
+    return { color: avatar.topColor, avatar, status: "available" as UserStatus, bio: "" };
   }
 }
 
@@ -392,6 +405,7 @@ function fallbackPresence(participant: RemoteParticipant, map: OfficeMap): Playe
     identity: participant.identity,
     name: participant.name || participant.identity,
     color: profile.color,
+    avatar: profile.avatar,
     status: profile.status,
     bio: profile.bio,
     x: map.spawn.x + ((seed % 9) - 4) * TILE,

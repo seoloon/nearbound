@@ -4,6 +4,7 @@ import type { CSSProperties, Dispatch, FormEvent, SetStateAction } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getAudibility, type OfficeMap } from "../game/map";
 import type { ChatMessage, PlayerPresence } from "../types";
+import { PixelAvatar } from "./PixelAvatar";
 
 interface ChatPanelProps {
   room: Room | null;
@@ -186,18 +187,21 @@ export function ChatPanel({
           {messages.length === 0 ? (
             <div className="empty-chat">No messages yet.</div>
           ) : (
-            messages.map((message) => (
-              <article className={`chat-message ${message.local ? "is-local" : ""}`} key={message.id}>
-                <span className="chat-avatar" style={{ "--avatar-color": message.color } as CSSProperties} />
-                <div>
-                  <header>
-                    <strong>{message.local ? "You" : message.name}</strong>
-                    <time>{formatTime(message.sentAt)}</time>
-                  </header>
-                  <p>{message.text}</p>
-                </div>
-              </article>
-            ))
+            messages.map((message) => {
+              const profile = message.local ? local : remotePresences[message.identity];
+              return (
+                <article className={`chat-message ${message.local ? "is-local" : ""}`} key={message.id}>
+                  <PixelAvatar avatar={profile?.avatar} status={profile?.status} size="small" />
+                  <div>
+                    <header>
+                      <strong>{message.local ? "You" : message.name}</strong>
+                      <time>{formatTime(message.sentAt)}</time>
+                    </header>
+                    <p>{message.text}</p>
+                  </div>
+                </article>
+              );
+            })
           )}
           <div ref={messagesEndRef} />
         </div>
@@ -267,9 +271,7 @@ function RemoteMediaTile({
 
   return (
     <div className="nearby-tile">
-      <div className="nearby-avatar" style={{ "--avatar-color": presence.color } as CSSProperties}>
-        <i className={`status-dot is-${presence.status}`} />
-      </div>
+      <PixelAvatar avatar={presence.avatar} status={presence.status} size="small" />
       <div>
         <strong>{presence.name}</strong>
         <small>{distanceTiles < 1 ? "very close" : `${distanceTiles.toFixed(1)} tiles`}</small>
