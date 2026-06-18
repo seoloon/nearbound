@@ -4,7 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="0051b22a-8f70-4ec6-a29e-305a4acc65aa" name="Changes" comment="" />
+    <list default="true" id="0051b22a-8f70-4ec6-a29e-305a4acc65aa" name="Changes" comment="Initial commit">
+      <change beforePath="$PROJECT_DIR$/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/App.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ChatPanel.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ChatPanel.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/WorldCanvas.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/WorldCanvas.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/game/renderer.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/game/renderer.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/livekit/useLiveKitRoom.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/livekit/useLiveKitRoom.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/styles.css" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -64,11 +71,24 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1781795233685</updated>
-      <workItem from="1781795235877" duration="5813000" />
+      <workItem from="1781795235877" duration="6683000" />
     </task>
+    <task id="LOCAL-00001" summary="Initial commit">
+      <option name="closed" value="true" />
+      <created>1781807491940</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1781807491940</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Initial commit" />
+    <option name="LAST_COMMIT_MESSAGE" value="Initial commit" />
   </component>
 </project>
