@@ -11,6 +11,7 @@ interface WorldCanvasProps {
   local: PlayerPresence;
   remotes: PlayerPresence[];
   room: Room | null;
+  cameraActive: boolean;
   mediaVersion: number;
   onLocalChange: (presence: PlayerPresence) => void;
 }
@@ -43,6 +44,7 @@ interface PublicationLike {
   track?: TrackLike;
   trackSid?: string;
   isSubscribed?: boolean;
+  isMuted?: boolean;
 }
 
 interface ParticipantLike {
@@ -57,8 +59,10 @@ const MIN_ZOOM = 0.85;
 const MAX_ZOOM = 4;
 const ZOOM_STEP = 1.12;
 const REMOTE_SMOOTHING = 11;
+const NAME_TAG_TOP_OFFSET = 44;
+const VIDEO_BUBBLE_GAP = 3;
 
-export function WorldCanvas({ map, local, remotes, room, mediaVersion, onLocalChange }: WorldCanvasProps) {
+export function WorldCanvas({ map, local, remotes, room, cameraActive, mediaVersion, onLocalChange }: WorldCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const localRef = useRef(local);
   const remotesRef = useRef(remotes);
@@ -246,6 +250,7 @@ export function WorldCanvas({ map, local, remotes, room, mediaVersion, onLocalCh
         remotes={Array.from(smoothRemotesRef.current.values())}
         camera={cameraRef.current}
         size={size}
+        cameraActive={cameraActive}
         mediaVersion={mediaVersion}
         tick={overlayTick}
       />
@@ -450,6 +455,7 @@ function VideoBubbles({
   remotes,
   camera,
   size,
+  cameraActive,
   mediaVersion,
   tick
 }: {
@@ -458,6 +464,7 @@ function VideoBubbles({
   remotes: PlayerPresence[];
   camera: CameraState;
   size: Size;
+  cameraActive: boolean;
   mediaVersion: number;
   tick: number;
 }) {
@@ -469,7 +476,7 @@ function VideoBubbles({
     {
       id: local.identity,
       presence: local,
-      publication: localPublication,
+      publication: cameraActive ? localPublication : undefined,
       muted: true
     },
     ...remotes.map((presence) => ({
@@ -481,17 +488,21 @@ function VideoBubbles({
       ),
       muted: false
     }))
-  ].filter((bubble) => Boolean(bubble.publication?.track));
+  ].filter((bubble) => isVisibleVideoPublication(bubble.publication));
 
   return (
     <div className="video-bubble-layer">
       {bubbles.map((bubble) => {
-        const position = worldToScreen(bubble.presence.x, bubble.presence.y - 70, camera);
+        const position = worldToScreen(
+          bubble.presence.x,
+          bubble.presence.y - NAME_TAG_TOP_OFFSET - VIDEO_BUBBLE_GAP,
+          camera
+        );
         if (
-          position.x < -120 ||
-          position.y < -100 ||
-          position.x > size.width + 120 ||
-          position.y > size.height + 120
+          position.x < -180 ||
+          position.y < -160 ||
+          position.x > size.width + 180 ||
+          position.y > size.height + 180
         ) {
           return null;
         }
@@ -537,6 +548,10 @@ function VideoTrack({
 function publicationFor(participant: ParticipantLike | undefined, source: Track.Source) {
   if (!participant) return undefined;
   return Array.from(participant.trackPublications.values()).find((publication) => publication.source === source);
+}
+
+function isVisibleVideoPublication(publication: PublicationLike | undefined) {
+  return Boolean(publication?.track && publication.isMuted !== true);
 }
 
 function worldToScreen(x: number, y: number, camera: CameraState) {

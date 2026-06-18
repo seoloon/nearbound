@@ -97,6 +97,7 @@ export function App() {
         local={local}
         remotes={remotes}
         room={livekit.room}
+        cameraActive={livekit.media.camera}
         mediaVersion={livekit.mediaVersion}
         onLocalChange={handleLocalChange}
       />
