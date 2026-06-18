@@ -1,6 +1,6 @@
 import { LogOut, Maximize2, MessageSquare, PanelRightClose, Send, Settings, X } from "lucide-react";
 import { RemoteParticipant, RemoteTrackPublication, Room, Track } from "livekit-client";
-import type { CSSProperties, Dispatch, FormEvent, SetStateAction } from "react";
+import type { CSSProperties, Dispatch, FormEvent, ReactElement, SetStateAction } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getAudibility, type OfficeMap } from "../game/map";
 import type { ChatMessage, PlayerPresence } from "../types";
@@ -34,6 +34,8 @@ interface VoiceVolumeSettings {
 }
 
 const VOICE_VOLUME_KEY = "nearbound.voiceVolumes.v1";
+const MAX_VOICE_VOLUME = 2;
+const VOICE_OUTPUT_BOOST = 1.3;
 const DEFAULT_VOICE_VOLUMES: VoiceVolumeSettings = {
   master: 1,
   users: {}
@@ -108,16 +110,41 @@ export function ChatPanel({
     setDraft("");
   }
 
+  const remotePresenceList = Object.values(remotePresences);
+  const audioLayer = (
+    <RemoteAudioLayer
+      nearby={nearby}
+      deafened={deafened}
+      voiceVolumes={voiceVolumes}
+      mediaVersion={mediaVersion}
+    />
+  );
+
   if (collapsed) {
     return (
       <>
+        {audioLayer}
         <button className="chat-tab" type="button" onClick={() => setCollapsed(false)} aria-label="Open chat">
           <MessageSquare size={20} />
           {messages.length > 0 && <span>{messages.length}</span>}
         </button>
+        {screenShares.length > 0 && (
+          <FloatingStreamPreviews
+            screenShares={screenShares}
+            mediaVersion={mediaVersion}
+            onExpand={setExpandedStream}
+          />
+        )}
+        {expandedStream && (
+          <StreamModal
+            publication={expandedStream}
+            mediaVersion={mediaVersion}
+            onClose={() => setExpandedStream(null)}
+          />
+        )}
         {settingsOpen && (
           <SettingsModal
-            presences={Object.values(remotePresences)}
+            presences={remotePresenceList}
             voiceVolumes={voiceVolumes}
             onVoiceVolumesChange={setVoiceVolumes}
             onClose={() => setSettingsOpen(false)}
@@ -130,6 +157,7 @@ export function ChatPanel({
 
   return (
     <>
+      {audioLayer}
       <aside className="chat-panel">
         <div className="chat-heading">
           <div>
@@ -168,16 +196,11 @@ export function ChatPanel({
 
         {nearby.length > 0 && (
           <div className="nearby-strip">
-            {nearby.map(({ participant, presence, gain, distanceTiles }) => (
+            {nearby.map(({ presence, distanceTiles }) => (
               <RemoteMediaTile
-                key={participant.identity}
-                participant={participant}
+                key={presence.identity}
                 presence={presence}
-                gain={gain}
-                deafened={deafened}
-                volume={voiceVolumes.master * (voiceVolumes.users[presence.identity] ?? 1)}
                 distanceTiles={distanceTiles}
-                mediaVersion={mediaVersion}
               />
             ))}
           </div>
@@ -227,7 +250,7 @@ export function ChatPanel({
       )}
       {settingsOpen && (
         <SettingsModal
-          presences={Object.values(remotePresences)}
+          presences={remotePresenceList}
           voiceVolumes={voiceVolumes}
           onVoiceVolumesChange={setVoiceVolumes}
           onClose={() => setSettingsOpen(false)}
@@ -257,18 +280,88 @@ function CornerActions({
   );
 }
 
-function RemoteMediaTile({
-  participant,
-  presence,
-  gain,
-  deafened,
-  volume,
-  distanceTiles,
-  mediaVersion
-}: NearbyParticipant & { deafened: boolean; volume: number; mediaVersion: number }) {
-  const microphone = publicationFor(participant, Track.Source.Microphone);
-  const screenAudio = publicationFor(participant, Track.Source.ScreenShareAudio);
+function FloatingStreamPreviews({
+  screenShares,
+  mediaVersion,
+  onExpand
+}: {
+  screenShares: Array<NearbyParticipant & { publication: RemoteTrackPublication }>;
+  mediaVersion: number;
+  onExpand: (publication: RemoteTrackPublication) => void;
+}) {
+  return (
+    <div className="floating-stream-stack">
+      {screenShares.map(({ participant, presence, publication }) => (
+        <button
+          className="stream-card"
+          type="button"
+          key={participant.identity}
+          onClick={() => onExpand(publication)}
+        >
+          <VideoSink publication={publication} mediaVersion={mediaVersion} muted />
+          <span>
+            <strong>{presence.name}</strong>
+            <small>is streaming</small>
+          </span>
+          <Maximize2 size={16} />
+        </button>
+      ))}
+    </div>
+  );
+}
 
+function RemoteAudioLayer({
+  nearby,
+  deafened,
+  voiceVolumes,
+  mediaVersion
+}: {
+  nearby: NearbyParticipant[];
+  deafened: boolean;
+  voiceVolumes: VoiceVolumeSettings;
+  mediaVersion: number;
+}) {
+  return (
+    <>
+      {nearby.flatMap(({ participant, presence, gain }) => {
+        const microphone = publicationFor(participant, Track.Source.Microphone);
+        const screenAudio = publicationFor(participant, Track.Source.ScreenShareAudio);
+        const outputGain = deafened
+          ? 0
+          : gain * voiceVolumes.master * (voiceVolumes.users[presence.identity] ?? 1) * VOICE_OUTPUT_BOOST;
+        const sinks: ReactElement[] = [];
+
+        if (microphone?.track) {
+          sinks.push(
+            <AudioSink
+              key={`${participant.identity}:microphone`}
+              publication={microphone}
+              gain={outputGain}
+              mediaVersion={mediaVersion}
+            />
+          );
+        }
+        if (screenAudio?.track) {
+          sinks.push(
+            <AudioSink
+              key={`${participant.identity}:screen-audio`}
+              publication={screenAudio}
+              gain={outputGain}
+              mediaVersion={mediaVersion}
+            />
+          );
+        }
+
+        return sinks;
+      })}
+    </>
+  );
+}
+
+function RemoteMediaTile({
+  presence,
+  distanceTiles
+}: Pick<NearbyParticipant, "presence" | "distanceTiles">) {
   return (
     <div className="nearby-tile">
       <PixelAvatar avatar={presence.avatar} status={presence.status} size="small" />
@@ -276,8 +369,6 @@ function RemoteMediaTile({
         <strong>{presence.name}</strong>
         <small>{distanceTiles < 1 ? "very close" : `${distanceTiles.toFixed(1)} tiles`}</small>
       </div>
-      {microphone?.track && <AudioSink publication={microphone} gain={deafened ? 0 : gain * volume} mediaVersion={mediaVersion} />}
-      {screenAudio?.track && <AudioSink publication={screenAudio} gain={deafened ? 0 : gain * volume} mediaVersion={mediaVersion} />}
     </div>
   );
 }
@@ -296,7 +387,7 @@ function SettingsModal({
   const sortedPresences = [...presences].sort((a, b) => a.name.localeCompare(b.name));
 
   function setMaster(value: number) {
-    onVoiceVolumesChange((current) => ({ ...current, master: value }));
+    onVoiceVolumesChange((current) => ({ ...current, master: clampVolume(value) }));
   }
 
   function setUser(identity: string, value: number) {
@@ -304,7 +395,7 @@ function SettingsModal({
       ...current,
       users: {
         ...current.users,
-        [identity]: value
+        [identity]: clampVolume(value)
       }
     }));
   }
@@ -373,7 +464,8 @@ function VolumeRow({
   value: number;
   onChange: (value: number) => void;
 }) {
-  const percent = Math.round(value * 100);
+  const normalizedValue = clampVolume(value);
+  const percent = Math.round(normalizedValue * 100);
   return (
     <label className="volume-row">
       <span className="volume-label">
@@ -383,9 +475,9 @@ function VolumeRow({
       <input
         type="range"
         min="0"
-        max="1"
+        max={MAX_VOICE_VOLUME}
         step="0.05"
-        value={value}
+        value={normalizedValue}
         onChange={(event) => onChange(Number(event.target.value))}
       />
       <em>{percent}%</em>
@@ -437,6 +529,10 @@ function VideoSink({
   return <video ref={ref} autoPlay playsInline muted={muted} />;
 }
 
+type WebAudioWindow = Window & typeof globalThis & {
+  webkitAudioContext?: typeof AudioContext;
+};
+
 function AudioSink({
   publication,
   gain,
@@ -447,19 +543,77 @@ function AudioSink({
   mediaVersion: number;
 }) {
   const ref = useRef<HTMLAudioElement | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const gainRef = useRef<GainNode | null>(null);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    element.volume = 1;
+
+    const AudioContextCtor = window.AudioContext || (window as WebAudioWindow).webkitAudioContext;
+    let resumeAudioContext: (() => void) | undefined;
+
+    if (AudioContextCtor) {
+      const audioContext = new AudioContextCtor();
+      const source = audioContext.createMediaElementSource(element);
+      const gainNode = audioContext.createGain();
+      source.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      gainNode.gain.value = clampVolume(gain);
+      audioContextRef.current = audioContext;
+      sourceRef.current = source;
+      gainRef.current = gainNode;
+
+      resumeAudioContext = () => {
+        if (audioContext.state === "suspended") {
+          void audioContext.resume().catch(() => undefined);
+        }
+      };
+      resumeAudioContext();
+      window.addEventListener("pointerdown", resumeAudioContext, { once: true });
+      window.addEventListener("keydown", resumeAudioContext, { once: true });
+    } else {
+      element.volume = Math.min(1, clampVolume(gain));
+    }
+
+    return () => {
+      if (resumeAudioContext) {
+        window.removeEventListener("pointerdown", resumeAudioContext);
+        window.removeEventListener("keydown", resumeAudioContext);
+      }
+      sourceRef.current?.disconnect();
+      gainRef.current?.disconnect();
+      const audioContext = audioContextRef.current;
+      if (audioContext && audioContext.state !== "closed") {
+        void audioContext.close().catch(() => undefined);
+      }
+      sourceRef.current = null;
+      gainRef.current = null;
+      audioContextRef.current = null;
+    };
+  }, []);
+
   useEffect(() => {
     const element = ref.current;
     const track = publication.track;
     if (!element || !track) return;
+
     track.attach(element);
-    element.volume = clampVolume(gain);
+    void element.play().catch(() => undefined);
     return () => {
       track.detach(element);
     };
   }, [publication.trackSid, publication.track, mediaVersion]);
 
   useEffect(() => {
-    if (ref.current) ref.current.volume = clampVolume(gain);
+    const nextGain = clampVolume(gain);
+    if (gainRef.current) {
+      gainRef.current.gain.setTargetAtTime(nextGain, gainRef.current.context.currentTime, 0.015);
+    } else if (ref.current) {
+      ref.current.volume = Math.min(1, nextGain);
+    }
   }, [gain]);
 
   return <audio ref={ref} autoPlay playsInline />;
@@ -497,7 +651,7 @@ function usePersistentVoiceVolumes() {
 
 function clampVolume(value: unknown) {
   return typeof value === "number" && Number.isFinite(value)
-    ? Math.max(0, Math.min(1, value))
+    ? Math.max(0, Math.min(MAX_VOICE_VOLUME, value))
     : 1;
 }
 

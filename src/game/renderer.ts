@@ -14,6 +14,7 @@ export interface RenderOptions {
   cameraY: number;
   viewportWidth: number;
   viewportHeight: number;
+  videoIdentities?: Set<string>;
 }
 
 export function drawWorld(
@@ -45,7 +46,13 @@ export function drawWorld(
       const image = images[item.object.asset];
       ctx.drawImage(image, Math.round(item.object.x), Math.round(item.object.y));
     } else {
-      drawPlayer(ctx, item.player, options.now, item.local);
+      drawPlayer(
+        ctx,
+        item.player,
+        options.now,
+        item.local,
+        !(options.videoIdentities?.has(item.player.identity) ?? false)
+      );
     }
   }
 
@@ -85,7 +92,8 @@ function drawPlayer(
   ctx: CanvasRenderingContext2D,
   player: PlayerPresence,
   now: number,
-  isLocal: boolean
+  isLocal: boolean,
+  showNameTag: boolean
 ) {
   const x = Math.round(player.x);
   const y = Math.round(player.y);
@@ -102,7 +110,9 @@ function drawPlayer(
     moving: player.moving,
     now
   });
-  drawNameTag(ctx, isLocal ? "You" : player.name, player.status, x, top - 13);
+  if (showNameTag) {
+    drawNameTag(ctx, isLocal ? "You" : player.name, player.status, x, top - 13);
+  }
   ctx.restore();
 }
 

@@ -59,13 +59,14 @@ const MIN_ZOOM = 0.85;
 const MAX_ZOOM = 4;
 const ZOOM_STEP = 1.12;
 const REMOTE_SMOOTHING = 11;
-const NAME_TAG_TOP_OFFSET = 44;
-const VIDEO_BUBBLE_GAP = 3;
+const VIDEO_BUBBLE_ANCHOR_OFFSET = 35;
 
 export function WorldCanvas({ map, local, remotes, room, cameraActive, mediaVersion, onLocalChange }: WorldCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const localRef = useRef(local);
   const remotesRef = useRef(remotes);
+  const roomRef = useRef(room);
+  const cameraActiveRef = useRef(cameraActive);
   const smoothRemotesRef = useRef(new Map<string, PlayerPresence>());
   const keysRef = useRef(new Set<string>());
   const targetRef = useRef<{ x: number; y: number } | null>(null);
@@ -84,6 +85,14 @@ export function WorldCanvas({ map, local, remotes, room, cameraActive, mediaVers
   useEffect(() => {
     remotesRef.current = remotes;
   }, [remotes]);
+
+  useEffect(() => {
+    roomRef.current = room;
+  }, [room]);
+
+  useEffect(() => {
+    cameraActiveRef.current = cameraActive;
+  }, [cameraActive]);
 
   useEffect(() => {
     let cancelled = false;
@@ -142,7 +151,13 @@ export function WorldCanvas({ map, local, remotes, room, cameraActive, mediaVers
       stepPlayer(map, localRef, keysRef.current, targetRef, dt);
       followCamera(localRef.current, size, cameraRef.current);
       const smoothRemotes = smoothRemotePresences(remotesRef.current, smoothRemotesRef.current, dt);
-      render(ctx, canvas, size, map, images, localRef.current, smoothRemotes, now, cameraRef.current);
+      const videoIdentities = visibleCameraIdentities(
+        roomRef.current,
+        localRef.current,
+        smoothRemotes,
+        cameraActiveRef.current
+      );
+      render(ctx, canvas, size, map, images, localRef.current, smoothRemotes, now, cameraRef.current, videoIdentities);
 
       if (now - lastEmitRef.current > 70) {
         lastEmitRef.current = now;
@@ -378,7 +393,8 @@ function render(
   local: PlayerPresence,
   remotes: PlayerPresence[],
   now: number,
-  camera: CameraState
+  camera: CameraState,
+  videoIdentities: Set<string>
 ) {
   const dpr = window.devicePixelRatio || 1;
   const targetWidth = Math.floor(size.width * dpr);
@@ -398,7 +414,8 @@ function render(
     cameraX: camera.x,
     cameraY: camera.y,
     viewportWidth: size.width / camera.zoom,
-    viewportHeight: size.height / camera.zoom
+    viewportHeight: size.height / camera.zoom,
+    videoIdentities
   });
 }
 
@@ -477,7 +494,8 @@ function VideoBubbles({
       id: local.identity,
       presence: local,
       publication: cameraActive ? localPublication : undefined,
-      muted: true
+      muted: true,
+      local: true
     },
     ...remotes.map((presence) => ({
       id: presence.identity,
@@ -486,7 +504,8 @@ function VideoBubbles({
         room.remoteParticipants.get(presence.identity) as unknown as ParticipantLike | undefined,
         Track.Source.Camera
       ),
-      muted: false
+      muted: false,
+      local: false
     }))
   ].filter((bubble) => isVisibleVideoPublication(bubble.publication));
 
@@ -495,14 +514,14 @@ function VideoBubbles({
       {bubbles.map((bubble) => {
         const position = worldToScreen(
           bubble.presence.x,
-          bubble.presence.y - NAME_TAG_TOP_OFFSET - VIDEO_BUBBLE_GAP,
+          bubble.presence.y - VIDEO_BUBBLE_ANCHOR_OFFSET,
           camera
         );
         if (
-          position.x < -180 ||
-          position.y < -160 ||
-          position.x > size.width + 180 ||
-          position.y > size.height + 180
+          position.x < -220 ||
+          position.y < -220 ||
+          position.x > size.width + 220 ||
+          position.y > size.height + 220
         ) {
           return null;
         }
@@ -514,6 +533,10 @@ function VideoBubbles({
             style={{ left: `${position.x}px`, top: `${position.y}px` }}
           >
             <VideoTrack publication={bubble.publication} muted={bubble.muted} mediaVersion={mediaVersion} />
+            <div className="video-bubble-name">
+              <i className={`video-bubble-status is-${bubble.presence.status}`} />
+              <span>{bubble.local ? "You" : bubble.presence.name}</span>
+            </div>
           </div>
         );
       })}
@@ -552,6 +575,33 @@ function publicationFor(participant: ParticipantLike | undefined, source: Track.
 
 function isVisibleVideoPublication(publication: PublicationLike | undefined) {
   return Boolean(publication?.track && publication.isMuted !== true);
+}
+
+function visibleCameraIdentities(
+  room: Room | null,
+  local: PlayerPresence,
+  remotes: PlayerPresence[],
+  cameraActive: boolean
+) {
+  const identities = new Set<string>();
+  if (!room) return identities;
+
+  const localPublication = publicationFor(room.localParticipant as unknown as ParticipantLike, Track.Source.Camera);
+  if (cameraActive && isVisibleVideoPublication(localPublication)) {
+    identities.add(local.identity);
+  }
+
+  for (const presence of remotes) {
+    const publication = publicationFor(
+      room.remoteParticipants.get(presence.identity) as unknown as ParticipantLike | undefined,
+      Track.Source.Camera
+    );
+    if (isVisibleVideoPublication(publication)) {
+      identities.add(presence.identity);
+    }
+  }
+
+  return identities;
 }
 
 function worldToScreen(x: number, y: number, camera: CameraState) {
