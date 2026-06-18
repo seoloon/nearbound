@@ -143,7 +143,7 @@ function drawNameTag(ctx: CanvasRenderingContext2D, name: string, status: Player
   const top = Math.round(y - height / 2);
   ctx.save();
   ctx.fillStyle = "rgba(19, 21, 24, 0.88)";
-  roundRect(ctx, left, top, width, height, 7);
+  nameTagBubblePath(ctx, left, top, width, height, 7, x);
   ctx.fill();
   ctx.fillStyle = statusColor(status);
   ctx.beginPath();
@@ -151,23 +151,33 @@ function drawNameTag(ctx: CanvasRenderingContext2D, name: string, status: Player
   ctx.fill();
   ctx.fillStyle = "#f4f0e8";
   ctx.fillText(text, left + 14, top + height / 2 + 0.5);
-  ctx.fillStyle = "rgba(19, 21, 24, 0.88)";
-  ctx.beginPath();
-  ctx.moveTo(x - 4, top + height - 1);
-  ctx.lineTo(x + 4, top + height - 1);
-  ctx.lineTo(x, top + height + 4);
-  ctx.closePath();
-  ctx.fill();
   ctx.restore();
 }
 
-function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+function nameTagBubblePath(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number,
+  tailX: number
+) {
+  const tailHalf = 5;
+  const tailHeight = 6;
+  const tailLeft = Math.max(x + r + 1, Math.min(x + w - r - tailHalf * 2 - 1, tailX - tailHalf));
+  const tailRight = tailLeft + tailHalf * 2;
+  const tailTip = tailLeft + tailHalf;
+
   ctx.beginPath();
   ctx.moveTo(x + r, y);
   ctx.lineTo(x + w - r, y);
   ctx.quadraticCurveTo(x + w, y, x + w, y + r);
   ctx.lineTo(x + w, y + h - r);
   ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(tailRight, y + h);
+  ctx.lineTo(tailTip, y + h + tailHeight);
+  ctx.lineTo(tailLeft, y + h);
   ctx.lineTo(x + r, y + h);
   ctx.quadraticCurveTo(x, y + h, x, y + h - r);
   ctx.lineTo(x, y + r);
