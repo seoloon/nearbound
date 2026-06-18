@@ -1,0 +1,9 @@
+node_modules
+dist
+.env
+.env.local
+npm-debug.log*
+*.tsbuildinfo
+/assets/
+public/assets/office/_office_contact.png
+.server.log

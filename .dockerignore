@@ -1,0 +1,8 @@
+node_modules
+dist
+.env
+.git
+.idea
+assets/textures/localhost-*.log
+assets/textures/_contact_*.png
+npm-debug.log*

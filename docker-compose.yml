@@ -1,0 +1,12 @@
+services:
+  nearbound-open-space:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      PUBLIC_APP_NAME: Nearbound Open Space
+      DEFAULT_ROOM: nearbound-open-space
+      LIVEKIT_WS_URL: ${LIVEKIT_WS_URL}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET}

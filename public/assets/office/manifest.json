@@ -1,0 +1,335 @@
+[
+  {
+    "id": "floor_wood",
+    "file": "floor_wood.png",
+    "category": "floor",
+    "source": "generated temporary pixel art",
+    "description": "warm wood plank floor tile 16x16 floor tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "floor_blue",
+    "file": "floor_blue.png",
+    "category": "floor",
+    "source": "generated temporary pixel art",
+    "description": "blue office carpet tile 16x16 floor tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "floor_checker",
+    "file": "floor_checker.png",
+    "category": "floor",
+    "source": "generated temporary pixel art",
+    "description": "gray checker tile 16x16 floor tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "wall_brick",
+    "file": "wall_brick.png",
+    "category": "wall",
+    "source": "generated temporary pixel art",
+    "description": "red brick wall tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "wall_tan",
+    "file": "wall_tan.png",
+    "category": "wall",
+    "source": "generated temporary pixel art",
+    "description": "tan brick wall tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "wall_stone",
+    "file": "wall_stone.png",
+    "category": "wall",
+    "source": "generated temporary pixel art",
+    "description": "gray stone wall tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "desk_simple",
+    "file": "desk_simple.png",
+    "category": "furniture",
+    "source": "generated temporary pixel art",
+    "description": "simple wooden desk",
+    "width": 34,
+    "height": 18
+  },
+  {
+    "id": "chair_wood",
+    "file": "chair_wood.png",
+    "category": "furniture",
+    "source": "generated temporary pixel art",
+    "description": "wooden chair",
+    "width": 18,
+    "height": 28
+  },
+  {
+    "id": "bookcase_small",
+    "file": "bookcase_small.png",
+    "category": "furniture",
+    "source": "generated temporary pixel art",
+    "description": "small bookcase",
+    "width": 28,
+    "height": 34
+  },
+  {
+    "id": "armchair_green",
+    "file": "armchair_green.png",
+    "category": "furniture",
+    "source": "generated temporary pixel art",
+    "description": "green armchair",
+    "width": 28,
+    "height": 30
+  },
+  {
+    "id": "fireplace",
+    "file": "fireplace.png",
+    "category": "furniture",
+    "source": "generated temporary pixel art",
+    "description": "brick fireplace",
+    "width": 32,
+    "height": 30
+  },
+  {
+    "id": "writing_desk",
+    "file": "writing_desk.png",
+    "category": "furniture",
+    "source": "generated temporary pixel art",
+    "description": "writing desk",
+    "width": 38,
+    "height": 28
+  },
+  {
+    "id": "meeting_table",
+    "file": "meeting_table.png",
+    "category": "furniture",
+    "source": "generated temporary pixel art",
+    "description": "work table",
+    "width": 42,
+    "height": 24
+  },
+  {
+    "id": "stool_small",
+    "file": "stool_small.png",
+    "category": "furniture",
+    "source": "generated temporary pixel art",
+    "description": "small stool",
+    "width": 18,
+    "height": 18
+  },
+  {
+    "id": "office_chair",
+    "file": "office_chair.png",
+    "category": "furniture",
+    "source": "generated temporary pixel art",
+    "description": "office chair",
+    "width": 24,
+    "height": 28
+  },
+  {
+    "id": "wardrobe_brown",
+    "file": "wardrobe_brown.png",
+    "category": "furniture",
+    "source": "generated temporary pixel art",
+    "description": "large wooden wardrobe",
+    "width": 48,
+    "height": 56
+  },
+  {
+    "id": "dresser_brown",
+    "file": "dresser_brown.png",
+    "category": "furniture",
+    "source": "generated temporary pixel art",
+    "description": "wooden dresser",
+    "width": 48,
+    "height": 38
+  },
+  {
+    "id": "conference_table",
+    "file": "conference_table.png",
+    "category": "furniture",
+    "source": "generated temporary pixel art",
+    "description": "conference table",
+    "width": 64,
+    "height": 36
+  },
+  {
+    "id": "bookcase_brown",
+    "file": "bookcase_brown.png",
+    "category": "furniture",
+    "source": "generated temporary pixel art",
+    "description": "large bookcase",
+    "width": 50,
+    "height": 62
+  },
+  {
+    "id": "coffee_table",
+    "file": "coffee_table.png",
+    "category": "furniture",
+    "source": "generated temporary pixel art",
+    "description": "coffee table",
+    "width": 48,
+    "height": 22
+  },
+  {
+    "id": "side_table",
+    "file": "side_table.png",
+    "category": "furniture",
+    "source": "generated temporary pixel art",
+    "description": "side table",
+    "width": 24,
+    "height": 28
+  },
+  {
+    "id": "chair_red",
+    "file": "chair_red.png",
+    "category": "furniture",
+    "source": "generated temporary pixel art",
+    "description": "red side chair",
+    "width": 18,
+    "height": 30
+  },
+  {
+    "id": "chair_blue",
+    "file": "chair_blue.png",
+    "category": "furniture",
+    "source": "generated temporary pixel art",
+    "description": "blue side chair",
+    "width": 18,
+    "height": 30
+  },
+  {
+    "id": "bookshelf_lounge",
+    "file": "bookshelf_lounge.png",
+    "category": "furniture",
+    "source": "generated temporary pixel art",
+    "description": "tall lounge shelf",
+    "width": 24,
+    "height": 58
+  },
+  {
+    "id": "tv_console",
+    "file": "tv_console.png",
+    "category": "furniture",
+    "source": "generated temporary pixel art",
+    "description": "TV console",
+    "width": 56,
+    "height": 34
+  },
+  {
+    "id": "couch_red_small",
+    "file": "couch_red_small.png",
+    "category": "furniture",
+    "source": "generated temporary pixel art",
+    "description": "red couch",
+    "width": 64,
+    "height": 28
+  },
+  {
+    "id": "round_table",
+    "file": "round_table.png",
+    "category": "furniture",
+    "source": "generated temporary pixel art",
+    "description": "round table",
+    "width": 32,
+    "height": 28
+  },
+  {
+    "id": "window_blue",
+    "file": "window_blue.png",
+    "category": "decor",
+    "source": "generated temporary pixel art",
+    "description": "blue window",
+    "width": 32,
+    "height": 32
+  },
+  {
+    "id": "fridge",
+    "file": "fridge.png",
+    "category": "furniture",
+    "source": "generated temporary pixel art",
+    "description": "refrigerator",
+    "width": 24,
+    "height": 56
+  },
+  {
+    "id": "kitchen_counter",
+    "file": "kitchen_counter.png",
+    "category": "furniture",
+    "source": "generated temporary pixel art",
+    "description": "kitchen counter",
+    "width": 70,
+    "height": 32
+  },
+  {
+    "id": "presentation_screen",
+    "file": "presentation_screen.png",
+    "category": "interactive",
+    "source": "generated temporary pixel art",
+    "description": "presentation screen",
+    "width": 48,
+    "height": 38
+  },
+  {
+    "id": "wall_clock",
+    "file": "wall_clock.png",
+    "category": "decor",
+    "source": "generated temporary pixel art",
+    "description": "wall clock",
+    "width": 14,
+    "height": 28
+  },
+  {
+    "id": "cozy_sofa",
+    "file": "cozy_sofa.png",
+    "category": "furniture",
+    "source": "generated temporary pixel art",
+    "description": "cozy sofa",
+    "width": 48,
+    "height": 26
+  },
+  {
+    "id": "plant_arch",
+    "file": "plant_arch.png",
+    "category": "decor",
+    "source": "generated temporary pixel art",
+    "description": "large indoor plant",
+    "width": 40,
+    "height": 46
+  },
+  {
+    "id": "cabinet_big",
+    "file": "cabinet_big.png",
+    "category": "furniture",
+    "source": "generated temporary pixel art",
+    "description": "wide storage cabinet",
+    "width": 48,
+    "height": 30
+  },
+  {
+    "id": "coffee_machine",
+    "file": "coffee_machine.png",
+    "category": "interactive",
+    "source": "generated temporary pixel art",
+    "description": "coffee machine",
+    "width": 22,
+    "height": 30
+  },
+  {
+    "id": "water_feature",
+    "file": "water_feature.png",
+    "category": "decor",
+    "source": "generated temporary pixel art",
+    "description": "small water feature",
+    "width": 38,
+    "height": 24
+  }
+]
