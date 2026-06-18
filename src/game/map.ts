@@ -408,10 +408,10 @@ export function getAudibility(local: PlayerPresence, remote: PlayerPresence, map
 
   const audible = distancePx <= HEARING_RADIUS_PX;
   const distanceTiles = distancePx / TILE;
-  const falloffStart = 2 * TILE;
-  const gain = audible
-    ? Math.max(0.08, Math.min(1, 1 - (distancePx - falloffStart) / (HEARING_RADIUS_PX - falloffStart)))
-    : 0;
+  const falloffStart = 3 * TILE;
+  const falloffRange = HEARING_RADIUS_PX - falloffStart;
+  const falloff = Math.max(0, Math.min(1, (distancePx - falloffStart) / falloffRange));
+  const gain = audible ? Math.max(0.35, 1 - falloff * 0.65) : 0;
 
   return {
     audible,

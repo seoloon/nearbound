@@ -35,6 +35,7 @@ interface VoiceVolumeSettings {
 
 const VOICE_VOLUME_KEY = "nearbound.voiceVolumes.v1";
 const MAX_VOICE_VOLUME = 2;
+const MAX_OUTPUT_GAIN = 4;
 const VOICE_OUTPUT_BOOST = 1.3;
 const DEFAULT_VOICE_VOLUMES: VoiceVolumeSettings = {
   master: 1,
@@ -543,39 +544,70 @@ function AudioSink({
   mediaVersion: number;
 }) {
   const ref = useRef<HTMLAudioElement | null>(null);
+  const latestGainRef = useRef(gain);
   const audioContextRef = useRef<AudioContext | null>(null);
-  const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
-  const gainRef = useRef<GainNode | null>(null);
+  const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const gainNodeRef = useRef<GainNode | null>(null);
+  const usingWebAudioRef = useRef(false);
+
+  useEffect(() => {
+    latestGainRef.current = gain;
+  }, [gain]);
 
   useEffect(() => {
     const element = ref.current;
-    if (!element) return;
-    element.volume = 1;
+    const track = publication.track;
+    if (!element || !track) return;
+
+    track.attach(element);
 
     const AudioContextCtor = window.AudioContext || (window as WebAudioWindow).webkitAudioContext;
+    let audioContext: AudioContext | null = null;
+    let source: MediaStreamAudioSourceNode | null = null;
+    let gainNode: GainNode | null = null;
     let resumeAudioContext: (() => void) | undefined;
 
-    if (AudioContextCtor) {
-      const audioContext = new AudioContextCtor();
-      const source = audioContext.createMediaElementSource(element);
-      const gainNode = audioContext.createGain();
+    try {
+      const stream = element.srcObject instanceof MediaStream ? element.srcObject : undefined;
+
+      if (!AudioContextCtor || !stream) {
+        usingWebAudioRef.current = false;
+        element.muted = false;
+        element.volume = Math.min(1, clampOutputGain(latestGainRef.current));
+        void element.play().catch(() => undefined);
+        return () => {
+          track.detach(element);
+        };
+      }
+
+      audioContext = new AudioContextCtor();
+      source = audioContext.createMediaStreamSource(stream);
+      gainNode = audioContext.createGain();
       source.connect(gainNode);
       gainNode.connect(audioContext.destination);
-      gainNode.gain.value = clampVolume(gain);
+      gainNode.gain.value = clampOutputGain(latestGainRef.current);
+
+      element.muted = true;
+      element.volume = 0;
+      usingWebAudioRef.current = true;
       audioContextRef.current = audioContext;
       sourceRef.current = source;
-      gainRef.current = gainNode;
+      gainNodeRef.current = gainNode;
 
       resumeAudioContext = () => {
-        if (audioContext.state === "suspended") {
+        if (audioContext?.state === "suspended") {
           void audioContext.resume().catch(() => undefined);
         }
       };
       resumeAudioContext();
       window.addEventListener("pointerdown", resumeAudioContext, { once: true });
       window.addEventListener("keydown", resumeAudioContext, { once: true });
-    } else {
-      element.volume = Math.min(1, clampVolume(gain));
+      void element.play().catch(() => undefined);
+    } catch {
+      usingWebAudioRef.current = false;
+      element.muted = false;
+      element.volume = Math.min(1, clampOutputGain(latestGainRef.current));
+      void element.play().catch(() => undefined);
     }
 
     return () => {
@@ -584,34 +616,25 @@ function AudioSink({
         window.removeEventListener("keydown", resumeAudioContext);
       }
       sourceRef.current?.disconnect();
-      gainRef.current?.disconnect();
+      gainNodeRef.current?.disconnect();
       const audioContext = audioContextRef.current;
       if (audioContext && audioContext.state !== "closed") {
         void audioContext.close().catch(() => undefined);
       }
-      sourceRef.current = null;
-      gainRef.current = null;
-      audioContextRef.current = null;
-    };
-  }, []);
-
-  useEffect(() => {
-    const element = ref.current;
-    const track = publication.track;
-    if (!element || !track) return;
-
-    track.attach(element);
-    void element.play().catch(() => undefined);
-    return () => {
       track.detach(element);
+      sourceRef.current = null;
+      gainNodeRef.current = null;
+      audioContextRef.current = null;
+      usingWebAudioRef.current = false;
     };
   }, [publication.trackSid, publication.track, mediaVersion]);
 
   useEffect(() => {
-    const nextGain = clampVolume(gain);
-    if (gainRef.current) {
-      gainRef.current.gain.setTargetAtTime(nextGain, gainRef.current.context.currentTime, 0.015);
-    } else if (ref.current) {
+    const nextGain = clampOutputGain(gain);
+    const gainNode = gainNodeRef.current;
+    if (gainNode) {
+      gainNode.gain.setValueAtTime(nextGain, gainNode.context.currentTime);
+    } else if (ref.current && !usingWebAudioRef.current) {
       ref.current.volume = Math.min(1, nextGain);
     }
   }, [gain]);
@@ -652,6 +675,12 @@ function usePersistentVoiceVolumes() {
 function clampVolume(value: unknown) {
   return typeof value === "number" && Number.isFinite(value)
     ? Math.max(0, Math.min(MAX_VOICE_VOLUME, value))
+    : 1;
+}
+
+function clampOutputGain(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value)
+    ? Math.max(0, Math.min(MAX_OUTPUT_GAIN, value))
     : 1;
 }
 
