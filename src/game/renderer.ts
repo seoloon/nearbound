@@ -22,7 +22,6 @@ export function drawWorld(
   options: RenderOptions
 ) {
   ctx.imageSmoothingEnabled = false;
-  ctx.clearRect(0, 0, options.viewportWidth, options.viewportHeight);
   ctx.save();
   ctx.translate(-Math.floor(options.cameraX), -Math.floor(options.cameraY));
 

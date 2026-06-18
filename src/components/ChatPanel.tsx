@@ -1,4 +1,4 @@
-import { LogOut, MessageSquare, PanelRightClose, Send } from "lucide-react";
+import { LogOut, Maximize2, MessageSquare, PanelRightClose, Send, X } from "lucide-react";
 import { RemoteParticipant, RemoteTrackPublication, Room, Track } from "livekit-client";
 import type { CSSProperties, FormEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -43,6 +43,7 @@ export function ChatPanel({
 }: ChatPanelProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [draft, setDraft] = useState("");
+  const [expandedStream, setExpandedStream] = useState<RemoteTrackPublication | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   const nearby = useMemo<NearbyParticipant[]>(() => {
@@ -63,6 +64,19 @@ export function ChatPanel({
       .filter((entry): entry is NearbyParticipant => Boolean(entry))
       .sort((a, b) => a.distanceTiles - b.distanceTiles);
   }, [room, remotePresences, local, map, mediaVersion]);
+
+  const screenShares = useMemo(
+    () =>
+      nearby
+        .map((entry) => ({
+          ...entry,
+          publication: publicationFor(entry.participant, Track.Source.ScreenShare)
+        }))
+        .filter((entry): entry is NearbyParticipant & { publication: RemoteTrackPublication } =>
+          Boolean(entry.publication?.track)
+        ),
+    [nearby, mediaVersion]
+  );
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ block: "end" });
@@ -105,6 +119,26 @@ export function ChatPanel({
         {mediaError && <p className="panel-alert">{mediaError}</p>}
         {status === "preview" && <p className="panel-muted">Local preview: chat and calls need LiveKit to sync.</p>}
         {status === "connecting" && <p className="panel-muted">Connecting to LiveKit...</p>}
+
+        {screenShares.length > 0 && (
+          <div className="stream-stack">
+            {screenShares.map(({ participant, presence, publication }) => (
+              <button
+                className="stream-card"
+                type="button"
+                key={participant.identity}
+                onClick={() => setExpandedStream(publication)}
+              >
+                <VideoSink publication={publication} mediaVersion={mediaVersion} muted />
+                <span>
+                  <strong>{presence.name}</strong>
+                  <small>is streaming</small>
+                </span>
+                <Maximize2 size={16} />
+              </button>
+            ))}
+          </div>
+        )}
 
         {nearby.length > 0 && (
           <div className="nearby-strip">
@@ -154,6 +188,13 @@ export function ChatPanel({
           </button>
         </form>
       </aside>
+      {expandedStream && (
+        <StreamModal
+          publication={expandedStream}
+          mediaVersion={mediaVersion}
+          onClose={() => setExpandedStream(null)}
+        />
+      )}
       <LeaveButton onLeave={onLeave} />
     </>
   );
@@ -176,18 +217,13 @@ function RemoteMediaTile({
   distanceTiles,
   mediaVersion
 }: NearbyParticipant & { deafened: boolean; mediaVersion: number }) {
-  const camera = publicationFor(participant, Track.Source.Camera);
   const microphone = publicationFor(participant, Track.Source.Microphone);
   const screenAudio = publicationFor(participant, Track.Source.ScreenShareAudio);
 
   return (
     <div className="nearby-tile">
-      <div className="nearby-video" style={{ "--avatar-color": presence.color } as CSSProperties}>
-        {camera?.isSubscribed && camera.track ? (
-          <VideoSink publication={camera} mediaVersion={mediaVersion} />
-        ) : (
-          <span />
-        )}
+      <div className="nearby-avatar" style={{ "--avatar-color": presence.color } as CSSProperties}>
+        <i className={`status-dot is-${presence.status}`} />
       </div>
       <div>
         <strong>{presence.name}</strong>
@@ -199,12 +235,35 @@ function RemoteMediaTile({
   );
 }
 
+function StreamModal({
+  publication,
+  mediaVersion,
+  onClose
+}: {
+  publication: RemoteTrackPublication;
+  mediaVersion: number;
+  onClose: () => void;
+}) {
+  return (
+    <div className="stream-modal" role="dialog" aria-modal="true">
+      <div className="stream-modal-panel">
+        <button type="button" onClick={onClose} aria-label="Close stream" title="Close stream">
+          <X size={20} />
+        </button>
+        <VideoSink publication={publication} mediaVersion={mediaVersion} muted />
+      </div>
+    </div>
+  );
+}
+
 function VideoSink({
   publication,
-  mediaVersion
+  mediaVersion,
+  muted = false
 }: {
   publication?: RemoteTrackPublication;
   mediaVersion: number;
+  muted?: boolean;
 }) {
   const ref = useRef<HTMLVideoElement | null>(null);
   useEffect(() => {
@@ -217,7 +276,7 @@ function VideoSink({
     };
   }, [publication?.trackSid, publication?.track, mediaVersion]);
 
-  return <video ref={ref} autoPlay playsInline muted={false} />;
+  return <video ref={ref} autoPlay playsInline muted={muted} />;
 }
 
 function AudioSink({

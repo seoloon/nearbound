@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { MutableRefObject, PointerEvent, WheelEvent } from "react";
+import { Room, Track } from "livekit-client";
 import { loadOfficeImages, type ImageMap } from "../game/assets";
 import { drawWorld } from "../game/renderer";
 import { getZoneAt, isBlocked, type OfficeMap } from "../game/map";
@@ -9,6 +10,8 @@ interface WorldCanvasProps {
   map: OfficeMap;
   local: PlayerPresence;
   remotes: PlayerPresence[];
+  room: Room | null;
+  mediaVersion: number;
   onLocalChange: (presence: PlayerPresence) => void;
 }
 
@@ -21,8 +24,7 @@ interface CameraState {
   x: number;
   y: number;
   zoom: number;
-  panX: number;
-  panY: number;
+  initialized: boolean;
 }
 
 interface PanDragState {
@@ -31,24 +33,45 @@ interface PanDragState {
   lastY: number;
 }
 
+interface TrackLike {
+  attach: (element: HTMLMediaElement) => unknown;
+  detach: (element: HTMLMediaElement) => unknown;
+}
+
+interface PublicationLike {
+  source?: Track.Source;
+  track?: TrackLike;
+  trackSid?: string;
+  isSubscribed?: boolean;
+}
+
+interface ParticipantLike {
+  identity?: string;
+  trackPublications: Map<string, PublicationLike>;
+}
+
 const PLAYER_SPEED = 88;
 const FOOT_W = 10;
 const FOOT_H = 7;
 const MIN_ZOOM = 0.85;
 const MAX_ZOOM = 4;
 const ZOOM_STEP = 1.12;
+const REMOTE_SMOOTHING = 11;
 
-export function WorldCanvas({ map, local, remotes, onLocalChange }: WorldCanvasProps) {
+export function WorldCanvas({ map, local, remotes, room, mediaVersion, onLocalChange }: WorldCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const localRef = useRef(local);
   const remotesRef = useRef(remotes);
+  const smoothRemotesRef = useRef(new Map<string, PlayerPresence>());
   const keysRef = useRef(new Set<string>());
   const targetRef = useRef<{ x: number; y: number } | null>(null);
-  const cameraRef = useRef<CameraState>({ x: 0, y: 0, zoom: 2.35, panX: 0, panY: 0 });
+  const cameraRef = useRef<CameraState>({ x: 0, y: 0, zoom: 2.35, initialized: false });
   const panDragRef = useRef<PanDragState | null>(null);
   const lastEmitRef = useRef(0);
+  const lastOverlayRef = useRef(0);
   const [images, setImages] = useState<ImageMap | null>(null);
   const [size, setSize] = useState<Size>({ width: 1, height: 1 });
+  const [overlayTick, setOverlayTick] = useState(0);
 
   useEffect(() => {
     localRef.current = local;
@@ -113,12 +136,17 @@ export function WorldCanvas({ map, local, remotes, onLocalChange }: WorldCanvasP
       const dt = Math.min(0.04, (now - previous) / 1000);
       previous = now;
       stepPlayer(map, localRef, keysRef.current, targetRef, dt);
-      updateCamera(localRef.current, size, cameraRef.current);
-      render(ctx, canvas, size, map, images, localRef.current, remotesRef.current, now, cameraRef.current);
+      followCamera(localRef.current, size, cameraRef.current);
+      const smoothRemotes = smoothRemotePresences(remotesRef.current, smoothRemotesRef.current, dt);
+      render(ctx, canvas, size, map, images, localRef.current, smoothRemotes, now, cameraRef.current);
 
       if (now - lastEmitRef.current > 70) {
         lastEmitRef.current = now;
         onLocalChange(localRef.current);
+      }
+      if (now - lastOverlayRef.current > 80) {
+        lastOverlayRef.current = now;
+        setOverlayTick((value) => (value + 1) % 100000);
       }
       animation = requestAnimationFrame(frame);
     };
@@ -158,11 +186,10 @@ export function WorldCanvas({ map, local, remotes, onLocalChange }: WorldCanvasP
     if (!drag || drag.pointerId !== event.pointerId) return;
     event.preventDefault();
     const camera = cameraRef.current;
-    camera.panX -= (event.clientX - drag.lastX) / camera.zoom;
-    camera.panY -= (event.clientY - drag.lastY) / camera.zoom;
+    camera.x -= (event.clientX - drag.lastX) / camera.zoom;
+    camera.y -= (event.clientY - drag.lastY) / camera.zoom;
     drag.lastX = event.clientX;
     drag.lastY = event.clientY;
-    updateCamera(localRef.current, size, camera);
   }
 
   function handlePointerEnd(event: PointerEvent<HTMLCanvasElement>) {
@@ -180,14 +207,12 @@ export function WorldCanvas({ map, local, remotes, onLocalChange }: WorldCanvasP
     const delta = event.deltaY || event.deltaX;
 
     if (event.shiftKey) {
-      camera.panY += delta / camera.zoom;
-      updateCamera(localRef.current, size, camera);
+      camera.y += delta / camera.zoom;
       return;
     }
 
     if (event.altKey) {
-      camera.panX += delta / camera.zoom;
-      updateCamera(localRef.current, size, camera);
+      camera.x += delta / camera.zoom;
       return;
     }
 
@@ -199,11 +224,9 @@ export function WorldCanvas({ map, local, remotes, onLocalChange }: WorldCanvasP
     const before = screenToWorld(pointer.x, pointer.y, camera);
     const factor = delta > 0 ? 1 / ZOOM_STEP : ZOOM_STEP;
     camera.zoom = clamp(camera.zoom * factor, MIN_ZOOM, MAX_ZOOM);
-    updateCamera(localRef.current, size, camera);
     const after = screenToWorld(pointer.x, pointer.y, camera);
-    camera.panX += before.x - after.x;
-    camera.panY += before.y - after.y;
-    updateCamera(localRef.current, size, camera);
+    camera.x += before.x - after.x;
+    camera.y += before.y - after.y;
   }
 
   return (
@@ -216,6 +239,15 @@ export function WorldCanvas({ map, local, remotes, onLocalChange }: WorldCanvasP
         onPointerUp={handlePointerEnd}
         onPointerCancel={handlePointerEnd}
         onWheel={handleWheel}
+      />
+      <VideoBubbles
+        room={room}
+        local={local}
+        remotes={Array.from(smoothRemotesRef.current.values())}
+        camera={cameraRef.current}
+        size={size}
+        mediaVersion={mediaVersion}
+        tick={overlayTick}
       />
       <div className="world-badge">{overlayText}</div>
       {!images && <div className="world-loading">Loading textures...</div>}
@@ -309,11 +341,27 @@ function footBlocked(map: OfficeMap, x: number, y: number) {
   );
 }
 
-function updateCamera(player: PlayerPresence, size: Size, camera: CameraState) {
+function followCamera(player: PlayerPresence, size: Size, camera: CameraState) {
   const viewportW = size.width / camera.zoom;
   const viewportH = size.height / camera.zoom;
-  camera.x = player.x - viewportW / 2 + camera.panX;
-  camera.y = player.y - viewportH / 2 + camera.panY;
+  if (!camera.initialized) {
+    camera.x = player.x - viewportW / 2;
+    camera.y = player.y - viewportH / 2;
+    camera.initialized = true;
+    return;
+  }
+
+  const marginX = Math.min(260, Math.max(96, viewportW * 0.34));
+  const marginY = Math.min(190, Math.max(72, viewportH * 0.32));
+  const left = camera.x + marginX;
+  const right = camera.x + viewportW - marginX;
+  const top = camera.y + marginY;
+  const bottom = camera.y + viewportH - marginY;
+
+  if (player.x < left) camera.x = player.x - marginX;
+  if (player.x > right) camera.x = player.x - (viewportW - marginX);
+  if (player.y < top) camera.y = player.y - marginY;
+  if (player.y > bottom) camera.y = player.y - (viewportH - marginY);
 }
 
 function render(
@@ -335,9 +383,9 @@ function render(
     canvas.height = targetHeight;
   }
 
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.clearRect(0, 0, size.width, size.height);
-  ctx.scale(camera.zoom, camera.zoom);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.setTransform(dpr * camera.zoom, 0, 0, dpr * camera.zoom, 0, 0);
   drawWorld(ctx, map, images, {
     local,
     remotes,
@@ -353,6 +401,38 @@ function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }
 
+function smoothRemotePresences(
+  targets: PlayerPresence[],
+  cache: Map<string, PlayerPresence>,
+  dt: number
+) {
+  const targetIds = new Set(targets.map((target) => target.identity));
+  for (const id of cache.keys()) {
+    if (!targetIds.has(id)) cache.delete(id);
+  }
+
+  const factor = 1 - Math.exp(-REMOTE_SMOOTHING * dt);
+  return targets.map((target) => {
+    const current = cache.get(target.identity);
+    if (!current) {
+      cache.set(target.identity, target);
+      return target;
+    }
+
+    const distance = Math.hypot(target.x - current.x, target.y - current.y);
+    const next =
+      distance > 96
+        ? target
+        : {
+            ...target,
+            x: current.x + (target.x - current.x) * factor,
+            y: current.y + (target.y - current.y) * factor
+          };
+    cache.set(target.identity, next);
+    return next;
+  });
+}
+
 function screenToWorld(x: number, y: number, camera: CameraState) {
   return {
     x: camera.x + x / camera.zoom,
@@ -362,4 +442,106 @@ function screenToWorld(x: number, y: number, camera: CameraState) {
 
 function isTextInput(target: EventTarget | null) {
   return target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement;
+}
+
+function VideoBubbles({
+  room,
+  local,
+  remotes,
+  camera,
+  size,
+  mediaVersion,
+  tick
+}: {
+  room: Room | null;
+  local: PlayerPresence;
+  remotes: PlayerPresence[];
+  camera: CameraState;
+  size: Size;
+  mediaVersion: number;
+  tick: number;
+}) {
+  void tick;
+  if (!room) return null;
+
+  const localPublication = publicationFor(room.localParticipant as unknown as ParticipantLike, Track.Source.Camera);
+  const bubbles = [
+    {
+      id: local.identity,
+      presence: local,
+      publication: localPublication,
+      muted: true
+    },
+    ...remotes.map((presence) => ({
+      id: presence.identity,
+      presence,
+      publication: publicationFor(
+        room.remoteParticipants.get(presence.identity) as unknown as ParticipantLike | undefined,
+        Track.Source.Camera
+      ),
+      muted: false
+    }))
+  ].filter((bubble) => Boolean(bubble.publication?.track));
+
+  return (
+    <div className="video-bubble-layer">
+      {bubbles.map((bubble) => {
+        const position = worldToScreen(bubble.presence.x, bubble.presence.y - 70, camera);
+        if (
+          position.x < -120 ||
+          position.y < -100 ||
+          position.x > size.width + 120 ||
+          position.y > size.height + 120
+        ) {
+          return null;
+        }
+
+        return (
+          <div
+            className="video-bubble"
+            key={bubble.id}
+            style={{ left: `${position.x}px`, top: `${position.y}px` }}
+          >
+            <VideoTrack publication={bubble.publication} muted={bubble.muted} mediaVersion={mediaVersion} />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function VideoTrack({
+  publication,
+  muted,
+  mediaVersion
+}: {
+  publication?: PublicationLike;
+  muted: boolean;
+  mediaVersion: number;
+}) {
+  const ref = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    const element = ref.current;
+    const track = publication?.track;
+    if (!element || !track) return;
+    track.attach(element);
+    return () => {
+      track.detach(element);
+    };
+  }, [publication?.trackSid, publication?.track, mediaVersion]);
+
+  return <video ref={ref} autoPlay playsInline muted={muted} />;
+}
+
+function publicationFor(participant: ParticipantLike | undefined, source: Track.Source) {
+  if (!participant) return undefined;
+  return Array.from(participant.trackPublications.values()).find((publication) => publication.source === source);
+}
+
+function worldToScreen(x: number, y: number, camera: CameraState) {
+  return {
+    x: (x - camera.x) * camera.zoom,
+    y: (y - camera.y) * camera.zoom
+  };
 }

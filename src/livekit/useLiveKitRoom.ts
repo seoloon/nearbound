@@ -219,7 +219,7 @@ export function useLiveKitRoom(
   useEffect(() => {
     if (!room || !local) return;
     const now = Date.now();
-    if (now - lastPublishedRef.current < 120) return;
+    if (now - lastPublishedRef.current < 50) return;
     lastPublishedRef.current = now;
     publishPresence(room, local, false);
   }, [room, local?.x, local?.y, local?.direction, local?.moving, local?.zoneId, local?.status, local?.bio]);

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChatPanel } from "./components/ChatPanel";
 import { ControlsBar } from "./components/ControlsBar";
 import { LoginScreen } from "./components/LoginScreen";
+import { LocalScreenPreview } from "./components/ScreenPreview";
 import { WorldCanvas } from "./components/WorldCanvas";
 import { createOfficeMap, getZoneAt } from "./game/map";
 import { useLiveKitRoom } from "./livekit/useLiveKitRoom";
@@ -89,7 +90,15 @@ export function App() {
 
   return (
     <main className="app-shell">
-      <WorldCanvas map={map} local={local} remotes={remotes} onLocalChange={handleLocalChange} />
+      <WorldCanvas
+        map={map}
+        local={local}
+        remotes={remotes}
+        room={livekit.room}
+        mediaVersion={livekit.mediaVersion}
+        onLocalChange={handleLocalChange}
+      />
+      <LocalScreenPreview room={livekit.room} active={livekit.media.screen} mediaVersion={livekit.mediaVersion} />
       <ChatPanel
         room={livekit.room}
         map={map}
