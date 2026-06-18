@@ -13,6 +13,12 @@
   --mint: #49c58f;
   --brick: #b94b42;
   --ink: #151918;
+  --hud-edge: 16px;
+  --hud-panel-padding: 14px;
+  --hud-control-size: 40px;
+  --hud-stack-gap: 16px;
+  --hud-actions-bottom: 16px;
+  --hud-chat-bottom: calc(var(--hud-actions-bottom) + var(--hud-control-size) + var(--hud-stack-gap));
 }
 
 * {
@@ -873,14 +879,14 @@ button:disabled {
 
 .chat-panel {
   position: fixed;
-  top: 16px;
-  right: 16px;
-  bottom: 92px;
+  top: var(--hud-edge);
+  right: var(--hud-edge);
+  bottom: var(--hud-chat-bottom);
   z-index: 7;
   display: grid;
   grid-template-rows: auto auto auto minmax(0, 1fr) auto;
-  width: min(360px, calc(100vw - 32px));
-  padding: 14px;
+  width: min(360px, calc(100vw - (var(--hud-edge) * 2)));
+  padding: var(--hud-panel-padding);
   border: 1px solid var(--glass-border);
   border-radius: 8px;
   background: var(--glass);
@@ -925,8 +931,8 @@ button:disabled {
 
 .chat-tab {
   position: fixed;
-  top: 16px;
-  right: 16px;
+  top: var(--hud-edge);
+  right: var(--hud-edge);
   z-index: 7;
   width: 46px;
   height: 46px;
@@ -1138,10 +1144,10 @@ button:disabled {
 
 .local-stream-preview {
   position: fixed;
-  left: 16px;
-  bottom: 16px;
+  left: var(--hud-edge);
+  bottom: var(--hud-edge);
   z-index: 7;
-  width: min(300px, calc(100vw - 32px));
+  width: min(300px, calc(100vw - (var(--hud-edge) * 2)));
   overflow: hidden;
   border: 1px solid var(--glass-border);
   border-radius: 8px;
@@ -1221,8 +1227,8 @@ button:disabled {
 
 .corner-actions {
   position: fixed;
-  right: 16px;
-  bottom: 30px;
+  right: var(--hud-edge);
+  bottom: var(--hud-actions-bottom);
   z-index: 8;
   display: flex;
   gap: 8px;
@@ -1232,8 +1238,8 @@ button:disabled {
   align-items: center;
   justify-content: center;
   display: grid;
-  width: 40px;
-  height: 40px;
+  width: var(--hud-control-size);
+  height: var(--hud-control-size);
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 8px;
   background: rgba(24, 27, 30, 0.78);
@@ -1410,6 +1416,13 @@ button:disabled {
 }
 
 @media (max-width: 920px) {
+  :root {
+    --hud-edge: 10px;
+    --hud-panel-padding: 12px;
+    --hud-stack-gap: 10px;
+    --hud-actions-bottom: 74px;
+  }
+
   .login-layout {
     width: min(760px, 100%);
     max-height: none;
@@ -1421,15 +1434,12 @@ button:disabled {
   }
 
   .chat-panel {
-    top: 10px;
-    right: 10px;
-    bottom: 130px;
-    width: min(330px, calc(100% - 20px));
+    width: min(330px, calc(100vw - (var(--hud-edge) * 2)));
   }
 
   .dock-wrap {
-    bottom: 10px;
-    width: calc(100% - 20px);
+    bottom: var(--hud-edge);
+    width: calc(100% - (var(--hud-edge) * 2));
   }
 
   .dock-wrap .controls-bar {
@@ -1478,14 +1488,9 @@ button:disabled {
   }
 
   .chat-panel {
-    left: 10px;
+    left: var(--hud-edge);
     width: auto;
     max-height: 42vh;
-  }
-
-  .corner-actions {
-    right: 10px;
-    bottom: 74px;
   }
 
   .volume-row {
