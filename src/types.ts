@@ -1,24 +1,11 @@
 export type Direction = "down" | "up" | "left" | "right";
 export type UserStatus = "available" | "dnd" | "inactive";
-export type AvatarGender = "male" | "female";
-export type AvatarHair = "short" | "bob" | "long" | "curly";
-export type AvatarTop = "tee" | "hoodie" | "jacket";
-export type AvatarBottom = "pants" | "shorts" | "skirt";
-export type AvatarShoes = "sneakers" | "boots" | "slipons";
-export type AvatarAccessory = "none" | "glasses" | "cap" | "headset";
+export type AvatarPartKey = "hair" | "face" | "neck" | "clothing" | "hands" | "item";
 
 export interface AvatarStyle {
-  gender: AvatarGender;
-  skin: string;
-  hair: AvatarHair;
-  hairColor: string;
-  top: AvatarTop;
+  dna: string;
   topColor: string;
-  bottom: AvatarBottom;
-  bottomColor: string;
-  shoes: AvatarShoes;
-  shoeColor: string;
-  accessory: AvatarAccessory;
+  backgroundColor: string;
 }
 
 export interface Session {

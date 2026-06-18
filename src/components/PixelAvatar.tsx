@@ -25,7 +25,7 @@ export function PixelAvatar({ avatar, direction = "down", status, size = "small"
     context.scale(3, 3);
     drawAvatarSprite(context, normalized, {
       x: 12,
-      y: 28,
+      y: 29,
       direction,
       moving: false,
       now: 0,
