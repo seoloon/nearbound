@@ -29,14 +29,17 @@ export function drawWorld(
 
   drawFloors(ctx, map, images);
   drawZones(ctx, map);
+  drawFloorObjects(ctx, map, images);
   drawWalls(ctx, map, images);
 
   const drawables = [
-    ...map.objects.map((object) => ({
-      kind: "object" as const,
-      y: object.y + images[object.asset].height,
-      object
-    })),
+    ...map.objects
+      .filter((object) => object.layer !== "floor")
+      .map((object) => ({
+        kind: "object" as const,
+        y: object.y + images[object.asset].height,
+        object
+      })),
     { kind: "player" as const, y: options.local.y, player: options.local, local: true },
     ...options.remotes.map((player) => ({ kind: "player" as const, y: player.y, player, local: false }))
   ].sort((a, b) => a.y - b.y);
@@ -57,6 +60,14 @@ export function drawWorld(
   }
 
   ctx.restore();
+}
+
+function drawFloorObjects(ctx: CanvasRenderingContext2D, map: OfficeMap, images: ImageMap) {
+  for (const object of map.objects) {
+    if (object.layer !== "floor") continue;
+    const image = images[object.asset];
+    ctx.drawImage(image, Math.round(object.x), Math.round(object.y));
+  }
 }
 
 function drawFloors(ctx: CanvasRenderingContext2D, map: OfficeMap, images: ImageMap) {

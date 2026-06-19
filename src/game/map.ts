@@ -27,6 +27,7 @@ export interface ObjectPlacement {
   asset: AssetId;
   x: number;
   y: number;
+  layer?: "floor" | "object";
   solid?: Rect;
   interactive?: {
     label: string;
@@ -160,11 +161,18 @@ export function createOfficeMap(): OfficeMap {
   const solidBase = (w: number, h: number): Rect => ({ x: 0, y: Math.max(0, h - 12), w, h: 12 });
 
   addObject(objects, collision, {
+    id: "alpha-rug",
+    asset: "rug_blue",
+    x: 45 * TILE,
+    y: 10 * TILE,
+    layer: "floor"
+  });
+  addObject(objects, collision, {
     id: "alpha-screen",
     asset: "presentation_screen",
     x: 43 * TILE,
     y: 5 * TILE,
-    solid: solidBase(47, 37),
+    solid: solidBase(32, 30),
     interactive: {
       label: "Alpha screen",
       hint: "A good room for LiveKit screen sharing."
@@ -175,57 +183,113 @@ export function createOfficeMap(): OfficeMap {
     asset: "conference_table",
     x: 47 * TILE,
     y: 9 * TILE,
-    solid: solidFull(62, 31)
+    solid: solidBase(53, 37)
   });
   addObject(objects, collision, {
     id: "alpha-chair-1",
     asset: "chair_red",
     x: 45 * TILE,
     y: 9 * TILE,
-    solid: solidBase(14, 31)
+    solid: solidBase(23, 23)
   });
   addObject(objects, collision, {
     id: "alpha-chair-2",
     asset: "chair_blue",
     x: 53 * TILE,
     y: 9 * TILE,
-    solid: solidBase(14, 31)
+    solid: solidBase(24, 24)
   });
   addObject(objects, collision, {
     id: "alpha-clock",
     asset: "wall_clock",
     x: 56 * TILE,
     y: 5 * TILE,
-    solid: solidBase(14, 32)
+    solid: solidBase(23, 22)
+  });
+  addObject(objects, collision, {
+    id: "alpha-console",
+    asset: "sci_fi_console",
+    x: 50 * TILE,
+    y: 5 * TILE,
+    solid: solidBase(40, 32)
+  });
+  addObject(objects, collision, {
+    id: "alpha-server",
+    asset: "server_rack",
+    x: 41 * TILE,
+    y: 11 * TILE,
+    solid: solidFull(22, 28)
+  });
+  addObject(objects, collision, {
+    id: "alpha-sci-fi-desk",
+    asset: "sci_fi_desk",
+    x: 54 * TILE,
+    y: 11 * TILE,
+    solid: solidBase(38, 23)
+  });
+  addObject(objects, collision, {
+    id: "alpha-vital-monitor",
+    asset: "vital_monitor",
+    x: 55 * TILE,
+    y: 9 * TILE,
+    solid: solidBase(22, 17)
   });
 
+  addObject(objects, collision, {
+    id: "focus-rug",
+    asset: "rug_green",
+    x: 9 * TILE,
+    y: 10 * TILE,
+    layer: "floor"
+  });
   addObject(objects, collision, {
     id: "focus-bookcase",
     asset: "bookcase_brown",
     x: 6 * TILE,
     y: 5 * TILE,
-    solid: solidFull(55, 60)
+    solid: solidFull(26, 56)
   });
   addObject(objects, collision, {
     id: "focus-desk",
     asset: "desk_simple",
     x: 11 * TILE,
     y: 8 * TILE,
-    solid: solidFull(32, 14)
+    solid: solidBase(53, 37)
   });
   addObject(objects, collision, {
     id: "focus-chair",
     asset: "office_chair",
     x: 12 * TILE,
     y: 10 * TILE,
-    solid: solidBase(24, 23)
+    solid: solidBase(18, 22)
   });
   addObject(objects, collision, {
     id: "focus-plant",
     asset: "plant_arch",
     x: 15 * TILE,
     y: 6 * TILE,
-    solid: solidBase(38, 28)
+    solid: solidBase(24, 24)
+  });
+  addObject(objects, collision, {
+    id: "focus-microscope",
+    asset: "microscope",
+    x: 14 * TILE,
+    y: 8 * TILE,
+    solid: solidBase(22, 30)
+  });
+  addObject(objects, collision, {
+    id: "focus-window",
+    asset: "window_blue",
+    x: 16 * TILE,
+    y: 5 * TILE,
+    solid: solidBase(27, 28)
+  });
+  addObject(objects, collision, {
+    id: "focus-side-table",
+    asset: "side_table",
+    x: 7 * TILE,
+    y: 11 * TILE,
+    solid: solidBase(24, 24)
   });
 
   for (let row = 0; row < 3; row += 1) {
@@ -237,14 +301,14 @@ export function createOfficeMap(): OfficeMap {
         asset: col % 2 === 0 ? "writing_desk" : "meeting_table",
         x,
         y,
-        solid: solidBase(30, 24)
+        solid: solidBase(24, 24)
       });
       addObject(objects, collision, {
         id: `chair-${row}-${col}`,
         asset: "office_chair",
         x: x + 7,
         y: y + 24,
-        solid: solidBase(24, 23)
+        solid: solidBase(18, 22)
       });
     }
   }
@@ -254,91 +318,175 @@ export function createOfficeMap(): OfficeMap {
     asset: "bookcase_small",
     x: 22 * TILE,
     y: 8 * TILE,
-    solid: solidFull(28, 31)
+    solid: solidFull(24, 24)
   });
   addObject(objects, collision, {
     id: "open-cabinet",
     asset: "cabinet_big",
     x: 30 * TILE,
     y: 7 * TILE,
-    solid: solidBase(47, 24)
+    solid: solidBase(26, 26)
   });
   addObject(objects, collision, {
     id: "open-water",
     asset: "water_feature",
     x: 35 * TILE,
     y: 7 * TILE,
-    solid: solidBase(38, 24)
+    solid: solidBase(29, 16)
+  });
+  addObject(objects, collision, {
+    id: "open-camera",
+    asset: "portable_camera",
+    x: 37 * TILE,
+    y: 16 * TILE,
+    solid: solidBase(22, 18)
+  });
+  addObject(objects, collision, {
+    id: "open-loot",
+    asset: "loot_chest",
+    x: 21 * TILE,
+    y: 29 * TILE,
+    solid: solidBase(31, 20)
   });
 
+  addObject(objects, collision, {
+    id: "kitchen-rug",
+    asset: "rug_white",
+    x: 50 * TILE,
+    y: 23 * TILE,
+    layer: "floor"
+  });
   addObject(objects, collision, {
     id: "kitchen-fridge",
     asset: "fridge",
     x: 48 * TILE,
     y: 20 * TILE,
-    solid: solidFull(22, 63)
+    solid: solidFull(22, 28)
   });
   addObject(objects, collision, {
     id: "kitchen-counter",
     asset: "kitchen_counter",
     x: 51 * TILE,
     y: 21 * TILE,
-    solid: solidBase(90, 31)
+    solid: solidBase(46, 22)
   });
   addObject(objects, collision, {
     id: "coffee-machine",
     asset: "coffee_machine",
     x: 57 * TILE,
     y: 19 * TILE,
-    solid: solidBase(23, 31),
+    solid: solidBase(22, 21),
     interactive: {
       label: "Coffee machine",
       hint: "A good spot to test proximity conversations."
     }
   });
+  addObject(objects, collision, {
+    id: "kitchen-flasks",
+    asset: "chemistry_flasks",
+    x: 53 * TILE,
+    y: 23 * TILE,
+    solid: solidBase(26, 20)
+  });
 
+  addObject(objects, collision, {
+    id: "lounge-rug",
+    asset: "rug_red",
+    x: 46 * TILE,
+    y: 32 * TILE,
+    layer: "floor"
+  });
   addObject(objects, collision, {
     id: "lounge-sofa",
     asset: "cozy_sofa",
     x: 42 * TILE,
     y: 29 * TILE,
-    solid: solidBase(46, 23)
+    solid: solidBase(61, 32)
   });
   addObject(objects, collision, {
     id: "lounge-table",
     asset: "round_table",
     x: 47 * TILE,
     y: 31 * TILE,
-    solid: solidBase(31, 23)
+    solid: solidBase(24, 24)
   });
   addObject(objects, collision, {
     id: "lounge-tv",
     asset: "tv_console",
     x: 52 * TILE,
     y: 27 * TILE,
-    solid: solidBase(61, 31)
+    solid: solidBase(37, 28)
   });
   addObject(objects, collision, {
     id: "lounge-bookcase",
     asset: "bookshelf_lounge",
     x: 58 * TILE,
     y: 28 * TILE,
-    solid: solidFull(22, 62)
+    solid: solidFull(24, 24)
+  });
+  addObject(objects, collision, {
+    id: "lounge-armchair",
+    asset: "armchair_green",
+    x: 43 * TILE,
+    y: 32 * TILE,
+    solid: solidBase(24, 24)
+  });
+  addObject(objects, collision, {
+    id: "lounge-stool",
+    asset: "stool_small",
+    x: 55 * TILE,
+    y: 33 * TILE,
+    solid: solidBase(24, 24)
   });
 
+  addObject(objects, collision, {
+    id: "lower-rug",
+    asset: "rug_blue",
+    x: 9 * TILE,
+    y: 31 * TILE,
+    layer: "floor"
+  });
   addObject(objects, collision, {
     id: "lower-couch",
     asset: "couch_red_small",
     x: 7 * TILE,
     y: 29 * TILE,
-    solid: solidBase(63, 31)
+    solid: solidBase(46, 23)
   });
   addObject(objects, collision, {
     id: "lower-table",
     asset: "coffee_table",
     x: 12 * TILE,
     y: 31 * TILE,
-    solid: solidBase(61, 23)
+    solid: solidBase(24, 24)
+  });
+  addObject(objects, collision, {
+    id: "lower-fireplace",
+    asset: "fireplace",
+    x: 5 * TILE,
+    y: 26 * TILE,
+    solid: solidBase(24, 24)
+  });
+  addObject(objects, collision, {
+    id: "lower-wardrobe",
+    asset: "wardrobe_brown",
+    x: 15 * TILE,
+    y: 26 * TILE,
+    solid: solidBase(35, 39)
+  });
+  addObject(objects, collision, {
+    id: "lower-dresser",
+    asset: "dresser_brown",
+    x: 5 * TILE,
+    y: 32 * TILE,
+    solid: solidBase(46, 22)
+  });
+  addObject(objects, collision, {
+    id: "lower-chair",
+    asset: "chair_wood",
+    x: 16 * TILE,
+    y: 32 * TILE,
+    solid: solidBase(18, 22)
   });
 
   return {
