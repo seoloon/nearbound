@@ -261,7 +261,7 @@ function AssetGrid({
           title={assetLabel(asset)}
           aria-label={assetLabel(asset)}
         >
-          <span className="asset-thumb">
+          <span className={`asset-thumb ${isBuildAsset(asset) ? "is-tile" : "is-prop"}`}>
             <img src={`${ASSET_BASE}/${OFFICE_ASSETS[asset]}`} alt="" draggable={false} />
           </span>
           <span>{assetLabel(asset)}</span>
