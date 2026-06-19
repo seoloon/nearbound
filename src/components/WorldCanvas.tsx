@@ -25,7 +25,7 @@ import {
   type Rect,
   type Zone
 } from "../game/map";
-import type { PlayerPresence } from "../types";
+import type { OfficeClaim, PlayerPresence } from "../types";
 
 interface WorldCanvasProps {
   map: OfficeMap;
@@ -36,6 +36,7 @@ interface WorldCanvasProps {
   mediaVersion: number;
   showEditorGrid?: boolean;
   editorTool?: MapEditorTool;
+  officeClaims?: OfficeClaim[];
   onEditorToolChange?: (tool: MapEditorTool) => void;
   onMapChange?: (updater: (current: OfficeMap) => OfficeMap) => void;
   onClaimOffice?: (zone: Zone) => void;
@@ -115,6 +116,7 @@ export function WorldCanvas({
   mediaVersion,
   showEditorGrid = false,
   editorTool,
+  officeClaims = [],
   onEditorToolChange,
   onMapChange,
   onClaimOffice,
@@ -273,8 +275,22 @@ export function WorldCanvas({
   }, [map, local.x, local.y]);
 
   const activeOfficeClaim = useMemo(
-    () => (activeOffice ? officeClaimFor([local, ...remotes], activeOffice.id) : undefined),
-    [activeOffice, local, remotes]
+    () => {
+      if (!activeOffice) return undefined;
+      return (
+        officeClaims.find((claim) => claim.zoneId === activeOffice.id) ||
+        (local.claimedOfficeId === activeOffice.id
+          ? {
+              identity: local.identity,
+              name: local.name,
+              zoneId: activeOffice.id,
+              zoneName: activeOffice.name,
+              claimedAt: Date.now()
+            }
+          : undefined)
+      );
+    },
+    [activeOffice, local.claimedOfficeId, local.identity, local.name, officeClaims]
   );
 
   function handlePointerDown(event: PointerEvent<HTMLCanvasElement>) {
@@ -554,7 +570,7 @@ function OfficeClaimPanel({
   onRelease
 }: {
   zone: Zone;
-  claim?: PlayerPresence;
+  claim?: OfficeClaim;
   local: PlayerPresence;
   onClaim?: (zone: Zone) => void;
   onRelease?: () => void;
@@ -580,10 +596,6 @@ function OfficeClaimPanel({
       )}
     </div>
   );
-}
-
-function officeClaimFor(presences: PlayerPresence[], zoneId: string) {
-  return presences.find((presence) => presence.claimedOfficeId === zoneId);
 }
 
 function stepPlayer(

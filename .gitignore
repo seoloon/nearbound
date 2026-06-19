@@ -7,3 +7,4 @@ npm-debug.log*
 /assets/
 public/assets/office/_office_contact.png
 .server.log
+.nearbound-data/
