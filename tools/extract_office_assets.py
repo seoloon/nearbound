@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import re
 import unicodedata
 from dataclasses import asdict, dataclass
@@ -31,6 +32,8 @@ class AssetInfo:
     id: str
     file: str
     category: str
+    group: str
+    label: str
     source: str
     description: str
     width: int
@@ -107,7 +110,7 @@ def main() -> None:
 
     ordered_assets = sorted(assets.values(), key=lambda item: item.id)
     write_manifest(ordered_assets)
-    write_assets_ts(ordered_assets)
+    write_assets_ts(ordered_assets, asset_digest(ordered_assets))
     print(f"Generated {len(ordered_assets)} office assets in {OUT}")
 
 
@@ -187,6 +190,8 @@ def write_texture(spec: TextureSpec) -> AssetInfo:
         id=spec.id,
         file=file_name,
         category=spec.category,
+        group=group_for_source(spec.source, spec.category),
+        label=label_for_id(spec.id),
         source=f"assets/{spec.source}",
         description=spec.description,
         width=image.width,
@@ -200,8 +205,12 @@ def write_manifest(assets: list[AssetInfo]) -> None:
         fp.write("\n")
 
 
-def write_assets_ts(assets: list[AssetInfo]) -> None:
+def write_assets_ts(assets: list[AssetInfo], asset_version: str) -> None:
     asset_lines = [f'  {json.dumps(asset.id)}: {json.dumps(asset.file)},' for asset in assets]
+    meta_lines = [
+        f"  {json.dumps(asset.id)}: {json.dumps({'category': asset.category, 'group': asset.group, 'label': asset.label, 'source': asset.source, 'width': asset.width, 'height': asset.height}, ensure_ascii=False)},"
+        for asset in assets
+    ]
     build_ids = [asset.id for asset in assets if asset.category in {"floor", "wall"}]
     floor_layer_ids = [
         asset.id
@@ -214,6 +223,7 @@ def write_assets_ts(assets: list[AssetInfo]) -> None:
     text = "\n".join(
         [
             'export const ASSET_BASE = "/assets/office";',
+            f"export const ASSET_VERSION = {json.dumps(asset_version)};",
             "",
             "export const OFFICE_ASSETS = {",
             *asset_lines,
@@ -221,6 +231,19 @@ def write_assets_ts(assets: list[AssetInfo]) -> None:
             "",
             "export type AssetId = keyof typeof OFFICE_ASSETS;",
             "export type ImageMap = Record<AssetId, HTMLImageElement>;",
+            "",
+            "export interface OfficeAssetMeta {",
+            "  category: string;",
+            "  group: string;",
+            "  label: string;",
+            "  source: string;",
+            "  width: number;",
+            "  height: number;",
+            "}",
+            "",
+            "export const OFFICE_ASSET_META = {",
+            *meta_lines,
+            "} as const satisfies Record<AssetId, OfficeAssetMeta>;",
             "",
             "export const BUILD_ASSET_IDS = [",
             *[f"  {json.dumps(asset_id)}," for asset_id in build_ids],
@@ -230,6 +253,10 @@ def write_assets_ts(assets: list[AssetInfo]) -> None:
             *[f"  {json.dumps(asset_id)}," for asset_id in floor_layer_ids],
             "] satisfies AssetId[];",
             "",
+            "export function officeAssetUrl(asset: AssetId): string {",
+            "  return `${ASSET_BASE}/${OFFICE_ASSETS[asset]}?v=${ASSET_VERSION}`;",
+            "}",
+            "",
             "export async function loadOfficeImages(): Promise<ImageMap> {",
             "  const entries = Object.entries(OFFICE_ASSETS) as [AssetId, string][];",
             "  const loaded = await Promise.all(",
@@ -238,7 +265,7 @@ def write_assets_ts(assets: list[AssetInfo]) -> None:
             "        const image = new Image();",
             "        image.onload = () => resolve([id, image]);",
             "        image.onerror = () => reject(new Error(`Unable to load ${file}`));",
-            "        image.src = `${ASSET_BASE}/${file}`;",
+            "        image.src = officeAssetUrl(id);",
             "      });",
             "    })",
             "  );",
@@ -256,6 +283,29 @@ def category_for_prop(path: Path) -> str:
     if "desk" in parts or "bedroom" in parts or "living_room" in parts or "kitchen" in parts or "bathroom" in parts:
         return "furniture"
     return "decor"
+
+
+def group_for_source(source: str, category: str) -> str:
+    parts = source.split("/")
+    if category in {"floor", "wall"}:
+        return category
+    if len(parts) >= 3 and parts[0] == "props":
+        return parts[1]
+    return "misc"
+
+
+def label_for_id(asset_id: str) -> str:
+    words = asset_id.replace("sci_fi", "sci-fi").replace("tv", "TV").replace("diy", "DIY").split("_")
+    return " ".join(word.upper() if word in {"TV", "DIY"} else word.capitalize() for word in words)
+
+
+def asset_digest(assets: list[AssetInfo]) -> str:
+    digest = hashlib.sha256()
+    for asset in assets:
+        digest.update(asset.id.encode("utf-8"))
+        digest.update(asset.file.encode("utf-8"))
+        digest.update((OUT / asset.file).read_bytes())
+    return digest.hexdigest()[:12]
 
 
 def rel_source(path: Path) -> str:

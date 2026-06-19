@@ -1,7 +1,7 @@
 import { Box, Grid3X3, Hammer, Layers, MousePointer2, PanelRightClose } from "lucide-react";
 import type { CSSProperties } from "react";
 import { useMemo } from "react";
-import { ASSET_BASE, OFFICE_ASSETS, type AssetId } from "../game/assets";
+import { OFFICE_ASSETS, OFFICE_ASSET_META, officeAssetUrl, type AssetId } from "../game/assets";
 import {
   BUILD_ASSETS,
   BUILD_ASSET_SET,
@@ -20,6 +20,28 @@ const EDITOR_TABS: Array<{ id: MapEditorTab; label: string; icon: typeof Layers 
   { id: "build", label: "Build", icon: Hammer },
   { id: "props", label: "Props", icon: Box }
 ];
+const ASSET_GROUP_ORDER = [
+  "floor",
+  "wall",
+  "desk",
+  "living_room",
+  "kitchen",
+  "bathroom",
+  "bedroom",
+  "universal",
+  "misc"
+];
+const ASSET_GROUP_LABELS: Record<string, string> = {
+  floor: "Floors",
+  wall: "Walls",
+  desk: "Desks",
+  living_room: "Living Room",
+  kitchen: "Kitchen",
+  bathroom: "Bathroom",
+  bedroom: "Bedroom",
+  universal: "Universal",
+  misc: "Misc"
+};
 
 interface MapEditorPanelProps {
   map: OfficeMap;
@@ -276,29 +298,62 @@ function AssetGrid({
   selectedAsset: AssetId;
   onSelectAsset: (asset: AssetId) => void;
 }) {
+  const groups = useMemo(() => groupAssets(assets), [assets]);
+
   return (
     <div className="asset-palette">
-      {assets.map((asset) => (
-        <button
-          key={asset}
-          type="button"
-          className={selectedAsset === asset ? "is-selected" : ""}
-          onClick={() => onSelectAsset(asset)}
-          title={assetLabel(asset)}
-          aria-label={assetLabel(asset)}
-        >
-          <span className={`asset-thumb ${isBuildAsset(asset) ? "is-tile" : "is-prop"}`}>
-            <img src={`${ASSET_BASE}/${OFFICE_ASSETS[asset]}`} alt="" draggable={false} />
-          </span>
-          <span>{assetLabel(asset)}</span>
-        </button>
+      {groups.map((group) => (
+        <section className="asset-group" key={group.id}>
+          <h3>
+            <span>{group.label}</span>
+            <small>{group.assets.length}</small>
+          </h3>
+          <div className="asset-grid">
+            {group.assets.map((asset) => (
+              <button
+                key={asset}
+                type="button"
+                className={selectedAsset === asset ? "is-selected" : ""}
+                onClick={() => onSelectAsset(asset)}
+                title={assetLabel(asset)}
+                aria-label={assetLabel(asset)}
+              >
+                <span className={`asset-thumb ${isBuildAsset(asset) ? "is-tile" : "is-prop"}`}>
+                  <img src={officeAssetUrl(asset)} alt="" draggable={false} />
+                </span>
+                <span>{assetLabel(asset)}</span>
+              </button>
+            ))}
+          </div>
+        </section>
       ))}
     </div>
   );
 }
 
 function assetLabel(asset: AssetId) {
-  return asset.replace(/_/g, " ");
+  return OFFICE_ASSET_META[asset]?.label || asset.replace(/_/g, " ");
+}
+
+function groupAssets(assets: readonly AssetId[]) {
+  const groups = new Map<string, AssetId[]>();
+  for (const asset of assets) {
+    const group = OFFICE_ASSET_META[asset]?.group || "misc";
+    groups.set(group, [...(groups.get(group) || []), asset]);
+  }
+
+  return Array.from(groups.entries())
+    .sort(([left], [right]) => groupRank(left) - groupRank(right) || left.localeCompare(right))
+    .map(([id, groupAssets]) => ({
+      id,
+      label: ASSET_GROUP_LABELS[id] || assetLabel(id as AssetId),
+      assets: groupAssets
+    }));
+}
+
+function groupRank(group: string) {
+  const index = ASSET_GROUP_ORDER.indexOf(group);
+  return index === -1 ? ASSET_GROUP_ORDER.length : index;
 }
 
 function zoneTypeForList(zone: OfficeMap["zones"][number]): MapEditorZoneType {

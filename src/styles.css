@@ -1227,13 +1227,46 @@ button:disabled {
   flex: 1 1 auto;
   min-height: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
-  grid-auto-rows: 92px;
   align-content: start;
-  align-items: start;
   gap: 8px;
   overflow-y: auto;
   padding-right: 2px;
+}
+
+.asset-group {
+  display: grid;
+  gap: 7px;
+}
+
+.asset-group h3 {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  padding: 5px 2px;
+  background: rgba(24, 27, 30, 0.92);
+  color: #f2d27d;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.asset-group h3 small {
+  color: #a9a299;
+  font-size: 10px;
+}
+
+.asset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+  grid-auto-rows: 92px;
+  align-items: start;
+  gap: 8px;
 }
 
 .asset-palette button {
