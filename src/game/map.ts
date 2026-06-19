@@ -41,6 +41,8 @@ export interface Zone extends Rect {
   name: string;
   kind: "open" | "private" | "social";
   type?: "office" | "living" | "meeting" | "hitbox";
+  subType?: "broadcast";
+  parentId?: string;
   blocks?: boolean;
 }
 
@@ -145,10 +147,38 @@ export function createOfficeMap(): OfficeMap {
   };
 }
 
+export function rectContains(rect: Rect, x: number, y: number) {
+  return x >= rect.x && x < rect.x + rect.w && y >= rect.y && y < rect.y + rect.h;
+}
+
+export function getZoneType(zone: Zone | undefined): NonNullable<Zone["type"]> | undefined {
+  if (!zone) return undefined;
+  if (zone.type) return zone.type;
+  if (zone.blocks) return "hitbox";
+  if (zone.kind === "social") return "living";
+  if (zone.kind === "private") return "office";
+  return "hitbox";
+}
+
+export function isBroadcastZone(zone: Zone | undefined) {
+  return zone?.type === "meeting" && zone.subType === "broadcast";
+}
+
+export function getZonesAt(map: OfficeMap, x: number, y: number): Zone[] {
+  return map.zones.filter((zone) => rectContains(zone, x, y));
+}
+
 export function getZoneAt(map: OfficeMap, x: number, y: number): Zone | undefined {
-  return map.zones.find(
-    (zone) => x >= zone.x && x < zone.x + zone.w && y >= zone.y && y < zone.y + zone.h
-  );
+  const zones = getZonesAt(map, x, y);
+  return zones[zones.length - 1];
+}
+
+export function getPrimaryZoneAt(map: OfficeMap, x: number, y: number): Zone | undefined {
+  const zones = getZonesAt(map, x, y);
+  for (let index = zones.length - 1; index >= 0; index -= 1) {
+    if (!zones[index].subType) return zones[index];
+  }
+  return zones[zones.length - 1];
 }
 
 export function isBlocked(map: OfficeMap, x: number, y: number): boolean {
@@ -158,13 +188,49 @@ export function isBlocked(map: OfficeMap, x: number, y: number): boolean {
   return Boolean(map.collision[ty]?.[tx]);
 }
 
+export function getLocalMediaAccess(local: PlayerPresence, map: OfficeMap) {
+  const meeting = meetingContextAt(map, local.x, local.y);
+  const canPublish = !meeting.meeting || Boolean(meeting.broadcast);
+  return {
+    canPublish,
+    reason: canPublish ? undefined : "Move into the Broadcast zone to speak or share in this meeting."
+  };
+}
+
 export function getAudibility(local: PlayerPresence, remote: PlayerPresence, map: OfficeMap) {
-  const localZone = getZoneAt(map, local.x, local.y);
-  const remoteZone = getZoneAt(map, remote.x, remote.y);
+  const localZone = getPrimaryZoneAt(map, local.x, local.y);
+  const remoteZone = getPrimaryZoneAt(map, remote.x, remote.y);
+  const localType = getZoneType(localZone);
+  const remoteType = getZoneType(remoteZone);
+  const localMeeting = meetingContextAt(map, local.x, local.y);
+  const remoteMeeting = meetingContextAt(map, remote.x, remote.y);
+  const distancePx = Math.hypot(local.x - remote.x, local.y - remote.y);
+
+  if (localMeeting.meeting || remoteMeeting.meeting) {
+    const sameMeeting = localMeeting.meeting?.id && localMeeting.meeting.id === remoteMeeting.meeting?.id;
+    const audible = Boolean(sameMeeting && remoteMeeting.broadcast);
+    return {
+      audible,
+      distancePx,
+      distanceTiles: distancePx / TILE,
+      gain: audible ? 1 : 0,
+      label: localMeeting.meeting?.name || remoteMeeting.meeting?.name
+    };
+  }
+
+  if (localType === "living" && remoteType === "living" && localZone?.id === remoteZone?.id) {
+    return {
+      audible: true,
+      distancePx,
+      distanceTiles: distancePx / TILE,
+      gain: 1,
+      label: localZone?.name
+    };
+  }
+
   const localPrivate = localZone?.kind === "private";
   const remotePrivate = remoteZone?.kind === "private";
   const samePrivate = localPrivate && remotePrivate && localZone?.id === remoteZone?.id;
-  const distancePx = Math.hypot(local.x - remote.x, local.y - remote.y);
 
   if ((localPrivate || remotePrivate) && !samePrivate) {
     return {
@@ -200,4 +266,21 @@ export function getAudibility(local: PlayerPresence, remote: PlayerPresence, map
     gain,
     label: remoteZone?.name || localZone?.name
   };
+}
+
+function meetingContextAt(map: OfficeMap, x: number, y: number) {
+  const zones = getZonesAt(map, x, y);
+  const broadcast = findLastZone(zones, isBroadcastZone);
+  const meeting =
+    (broadcast?.parentId ? map.zones.find((zone) => zone.id === broadcast.parentId) : undefined) ||
+    findLastZone(zones, (zone) => zone.type === "meeting" && !zone.subType);
+
+  return { meeting, broadcast };
+}
+
+function findLastZone(zones: Zone[], predicate: (zone: Zone) => boolean) {
+  for (let index = zones.length - 1; index >= 0; index -= 1) {
+    if (predicate(zones[index])) return zones[index];
+  }
+  return undefined;
 }

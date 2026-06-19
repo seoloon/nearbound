@@ -11,8 +11,13 @@ import {
 } from "../game/editor";
 import { drawWorld } from "../game/renderer";
 import {
+  getAudibility,
+  getLocalMediaAccess,
+  getPrimaryZoneAt,
   getZoneAt,
+  getZoneType,
   isBlocked,
+  isBroadcastZone,
   TILE,
   withRebuiltCollision,
   type ObjectPlacement,
@@ -31,7 +36,10 @@ interface WorldCanvasProps {
   mediaVersion: number;
   showEditorGrid?: boolean;
   editorTool?: MapEditorTool;
+  onEditorToolChange?: (tool: MapEditorTool) => void;
   onMapChange?: (updater: (current: OfficeMap) => OfficeMap) => void;
+  onClaimOffice?: (zone: Zone) => void;
+  onReleaseOffice?: () => void;
   onLocalChange: (presence: PlayerPresence) => void;
 }
 
@@ -67,7 +75,7 @@ interface EditorDragState {
 type EditorCanvasPreview =
   | { kind: "asset"; asset: AssetId; rect: Rect; erase?: boolean }
   | { kind: "build"; asset?: AssetId; rect: Rect; erase: boolean }
-  | { kind: "zone"; rect: Rect; zoneType: MapEditorTool["selectedZoneType"]; erase: boolean }
+  | { kind: "zone"; rect: Rect; zoneType: MapEditorTool["selectedZoneType"]; zoneSubType?: Zone["subType"]; erase: boolean }
   | { kind: "object-delete"; object: ObjectPlacement; rect: Rect }
   | { kind: "zone-delete"; zone: Zone };
 
@@ -107,7 +115,10 @@ export function WorldCanvas({
   mediaVersion,
   showEditorGrid = false,
   editorTool,
+  onEditorToolChange,
   onMapChange,
+  onClaimOffice,
+  onReleaseOffice,
   onLocalChange
 }: WorldCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -147,7 +158,14 @@ export function WorldCanvas({
   useEffect(() => {
     editorDragRef.current = null;
     editorPreviewRef.current = null;
-  }, [showEditorGrid, editorTool?.activeTab, editorTool?.action, editorTool?.selectedAsset, editorTool?.selectedZoneType]);
+  }, [
+    showEditorGrid,
+    editorTool?.activeTab,
+    editorTool?.action,
+    editorTool?.selectedAsset,
+    editorTool?.selectedZoneType,
+    editorTool?.pendingBroadcastFor
+  ]);
 
   useEffect(() => {
     let cancelled = false;
@@ -210,7 +228,8 @@ export function WorldCanvas({
         roomRef.current,
         localRef.current,
         smoothRemotes,
-        cameraActiveRef.current
+        cameraActiveRef.current,
+        map
       );
       render(
         ctx,
@@ -241,12 +260,22 @@ export function WorldCanvas({
 
     animation = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(animation);
-  }, [editorTool?.selectedZoneType, images, map, onLocalChange, showEditorGrid, size]);
+  }, [editorTool?.pendingBroadcastFor, editorTool?.selectedZoneType, images, map, onLocalChange, showEditorGrid, size]);
 
   const overlayText = useMemo(() => {
-    const zone = getZoneAt(map, local.x, local.y);
+    const zone = getPrimaryZoneAt(map, local.x, local.y);
     return zone ? zone.name : "Open-space";
   }, [map, local.x, local.y]);
+
+  const activeOffice = useMemo(() => {
+    const zone = getPrimaryZoneAt(map, local.x, local.y);
+    return getZoneType(zone) === "office" ? zone : undefined;
+  }, [map, local.x, local.y]);
+
+  const activeOfficeClaim = useMemo(
+    () => (activeOffice ? officeClaimFor([local, ...remotes], activeOffice.id) : undefined),
+    [activeOffice, local, remotes]
+  );
 
   function handlePointerDown(event: PointerEvent<HTMLCanvasElement>) {
     if (event.button === 1) {
@@ -355,6 +384,14 @@ export function WorldCanvas({
       return;
     }
 
+    if (editorTool.activeTab === "zone" && editorTool.action === "erase" && editorTool.zoneMode === "simple") {
+      const zone = findZoneAtPoint(map, world.x, world.y, editorTool.selectedZoneType);
+      if (zone) {
+        onMapChange((current) => eraseZonesById(current, new Set([zone.id])));
+      }
+      return;
+    }
+
     const mode = editorTool.activeTab === "build" ? editorTool.buildMode : editorTool.zoneMode;
     if (mode === "draw") {
       editorDragRef.current = {
@@ -400,7 +437,41 @@ export function WorldCanvas({
     }
 
     if (editorTool.activeTab === "zone") {
-      onMapChange((current) => applyZoneEdit(current, editorTool, rect));
+      if (editorTool.action === "erase") {
+        onMapChange((current) => applyZoneErase(current, editorTool, rect));
+        if (editorTool.pendingBroadcastFor) {
+          onEditorToolChange?.({
+            ...editorTool,
+            pendingBroadcastFor: undefined,
+            pendingBroadcastName: undefined
+          });
+        }
+        return;
+      }
+
+      const zone = createEditorZone(map, editorTool, rect);
+      onMapChange((current) =>
+        withRebuiltCollision({
+          ...current,
+          zones: [...current.zones, zone]
+        })
+      );
+
+      if (editorTool.selectedZoneType === "meeting") {
+        onEditorToolChange?.(
+          editorTool.pendingBroadcastFor
+            ? {
+                ...editorTool,
+                pendingBroadcastFor: undefined,
+                pendingBroadcastName: undefined
+              }
+            : {
+                ...editorTool,
+                pendingBroadcastFor: zone.id,
+                pendingBroadcastName: zone.name
+              }
+        );
+      }
     }
   }
 
@@ -450,6 +521,7 @@ export function WorldCanvas({
         onWheel={handleWheel}
       />
       <VideoBubbles
+        map={map}
         room={room}
         local={local}
         remotes={Array.from(smoothRemotesRef.current.values())}
@@ -460,9 +532,58 @@ export function WorldCanvas({
         tick={overlayTick}
       />
       <div className="world-badge">{overlayText}</div>
+      {activeOffice && (
+        <OfficeClaimPanel
+          zone={activeOffice}
+          claim={activeOfficeClaim}
+          local={local}
+          onClaim={onClaimOffice}
+          onRelease={onReleaseOffice}
+        />
+      )}
       {!images && <div className="world-loading">Loading textures...</div>}
     </div>
   );
+}
+
+function OfficeClaimPanel({
+  zone,
+  claim,
+  local,
+  onClaim,
+  onRelease
+}: {
+  zone: Zone;
+  claim?: PlayerPresence;
+  local: PlayerPresence;
+  onClaim?: (zone: Zone) => void;
+  onRelease?: () => void;
+}) {
+  const claimedBySelf = claim?.identity === local.identity;
+  const localHasOtherOffice = Boolean(local.claimedOfficeId && local.claimedOfficeId !== zone.id);
+  const status = claim ? (claimedBySelf ? "Your office" : `Claimed by ${claim.name}`) : "Unclaimed office";
+
+  return (
+    <div className="office-claim-panel">
+      <span>
+        <strong>{zone.name}</strong>
+        <small>{status}</small>
+      </span>
+      {claimedBySelf ? (
+        <button type="button" onClick={onRelease} disabled={!onRelease}>
+          Release
+        </button>
+      ) : (
+        <button type="button" onClick={() => onClaim?.(zone)} disabled={!onClaim || Boolean(claim && !claimedBySelf)}>
+          {localHasOtherOffice ? "Move claim" : "Claim"}
+        </button>
+      )}
+    </div>
+  );
+}
+
+function officeClaimFor(presences: PlayerPresence[], zoneId: string) {
+  return presences.find((presence) => presence.claimedOfficeId === zoneId);
 }
 
 function stepPlayer(
@@ -639,9 +760,9 @@ function drawEditorGrid(
   for (const zone of map.zones) {
     const zoneType = zoneTypeForPreview(zone);
     if (zoneFilter && zoneType !== zoneFilter) continue;
-    const color = zoneColor(zoneType);
+    const color = zoneColor(zoneType, zone.subType);
     ctx.save();
-    ctx.globalAlpha = zone.blocks ? 0.22 : 0.13;
+    ctx.globalAlpha = zone.blocks ? 0.22 : isBroadcastZone(zone) ? 0.22 : 0.13;
     ctx.fillStyle = color;
     ctx.fillRect(zone.x, zone.y, zone.w, zone.h);
     ctx.globalAlpha = 0.74;
@@ -718,7 +839,7 @@ function drawEditorPreview(
     if (preview.erase) {
       drawEraseRect(ctx, preview.rect);
     } else {
-      const color = zoneColor(preview.zoneType);
+      const color = zoneColor(preview.zoneType, preview.zoneSubType);
       ctx.globalAlpha = 0.24;
       ctx.fillStyle = color;
       ctx.fillRect(preview.rect.x, preview.rect.y, preview.rect.w, preview.rect.h);
@@ -802,6 +923,7 @@ function previewForEditorTool(
     kind: "zone",
     rect,
     zoneType: tool.selectedZoneType,
+    zoneSubType: tool.selectedZoneType === "meeting" && tool.pendingBroadcastFor ? "broadcast" : undefined,
     erase: tool.action === "erase"
   };
 }
@@ -838,30 +960,35 @@ function applyBuildEdit(map: OfficeMap, tool: MapEditorTool, rect: Rect): Office
   return map;
 }
 
-function applyZoneEdit(map: OfficeMap, tool: MapEditorTool, rect: Rect): OfficeMap {
-  if (tool.action === "erase") {
-    return withRebuiltCollision({
-      ...map,
-      zones: map.zones.filter(
-        (zone) => zoneTypeForPreview(zone) !== tool.selectedZoneType || !rectsIntersect(zone, rect)
-      )
-    });
-  }
-
+function createEditorZone(map: OfficeMap, tool: MapEditorTool, rect: Rect): Zone {
   const config = zoneTypeConfig(tool.selectedZoneType);
-  const count = map.zones.filter((zone) => zone.type === tool.selectedZoneType).length + 1;
-  const zone: Zone = {
+  const isBroadcast = tool.selectedZoneType === "meeting" && Boolean(tool.pendingBroadcastFor);
+  const count = map.zones.filter((zone) => zone.type === tool.selectedZoneType && !zone.subType).length + 1;
+  return {
     id: `editor-zone-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
-    name: `${config.label} ${count}`,
+    name: isBroadcast ? `${tool.pendingBroadcastName || "Meeting"} Broadcast` : `${config.label} ${count}`,
     kind: config.kind,
     type: config.id,
+    subType: isBroadcast ? "broadcast" : undefined,
+    parentId: isBroadcast ? tool.pendingBroadcastFor : undefined,
     blocks: config.blocks,
     ...rect
   };
+}
 
+function applyZoneErase(map: OfficeMap, tool: MapEditorTool, rect: Rect): OfficeMap {
+  const removedIds = new Set(
+    map.zones
+      .filter((zone) => zoneTypeForPreview(zone) === tool.selectedZoneType && rectsIntersect(zone, rect))
+      .map((zone) => zone.id)
+  );
+  return eraseZonesById(map, removedIds);
+}
+
+function eraseZonesById(map: OfficeMap, removedIds: Set<string>): OfficeMap {
   return withRebuiltCollision({
     ...map,
-    zones: [...map.zones, zone]
+    zones: map.zones.filter((zone) => !removedIds.has(zone.id) && (!zone.parentId || !removedIds.has(zone.parentId)))
   });
 }
 
@@ -967,7 +1094,8 @@ function rectsIntersect(a: Rect, b: Rect) {
   return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 }
 
-function zoneColor(type: MapEditorTool["selectedZoneType"]) {
+function zoneColor(type: MapEditorTool["selectedZoneType"], subType?: Zone["subType"]) {
+  if (subType === "broadcast") return "#d870e8";
   if (type === "hitbox") return "#ed4245";
   if (type === "meeting") return "#6674d8";
   if (type === "living") return "#49c58f";
@@ -975,10 +1103,7 @@ function zoneColor(type: MapEditorTool["selectedZoneType"]) {
 }
 
 function zoneTypeForPreview(zone: Zone): MapEditorTool["selectedZoneType"] {
-  if (zone.type) return zone.type;
-  if (zone.blocks) return "hitbox";
-  if (zone.kind === "social") return "living";
-  return "office";
+  return getZoneType(zone) || "office";
 }
 
 function clamp(value: number, min: number, max: number) {
@@ -1029,6 +1154,7 @@ function isTextInput(target: EventTarget | null) {
 }
 
 function VideoBubbles({
+  map,
   room,
   local,
   remotes,
@@ -1038,6 +1164,7 @@ function VideoBubbles({
   mediaVersion,
   tick
 }: {
+  map: OfficeMap;
   room: Room | null;
   local: PlayerPresence;
   remotes: PlayerPresence[];
@@ -1050,25 +1177,28 @@ function VideoBubbles({
   void tick;
   if (!room) return null;
 
+  const mediaAccess = getLocalMediaAccess(local, map);
   const localPublication = publicationFor(room.localParticipant as unknown as ParticipantLike, Track.Source.Camera);
   const bubbles = [
     {
       id: local.identity,
       presence: local,
-      publication: cameraActive ? localPublication : undefined,
+      publication: cameraActive && mediaAccess.canPublish ? localPublication : undefined,
       muted: true,
       local: true
     },
-    ...remotes.map((presence) => ({
-      id: presence.identity,
-      presence,
-      publication: publicationFor(
-        room.remoteParticipants.get(presence.identity) as unknown as ParticipantLike | undefined,
-        Track.Source.Camera
-      ),
-      muted: false,
-      local: false
-    }))
+    ...remotes
+      .filter((presence) => getAudibility(local, presence, map).audible)
+      .map((presence) => ({
+        id: presence.identity,
+        presence,
+        publication: publicationFor(
+          room.remoteParticipants.get(presence.identity) as unknown as ParticipantLike | undefined,
+          Track.Source.Camera
+        ),
+        muted: false,
+        local: false
+      }))
   ].filter((bubble) => isVisibleVideoPublication(bubble.publication));
 
   return (
@@ -1143,17 +1273,19 @@ function visibleCameraIdentities(
   room: Room | null,
   local: PlayerPresence,
   remotes: PlayerPresence[],
-  cameraActive: boolean
+  cameraActive: boolean,
+  map: OfficeMap
 ) {
   const identities = new Set<string>();
   if (!room) return identities;
 
   const localPublication = publicationFor(room.localParticipant as unknown as ParticipantLike, Track.Source.Camera);
-  if (cameraActive && isVisibleVideoPublication(localPublication)) {
+  if (cameraActive && getLocalMediaAccess(local, map).canPublish && isVisibleVideoPublication(localPublication)) {
     identities.add(local.identity);
   }
 
   for (const presence of remotes) {
+    if (!getAudibility(local, presence, map).audible) continue;
     const publication = publicationFor(
       room.remoteParticipants.get(presence.identity) as unknown as ParticipantLike | undefined,
       Track.Source.Camera

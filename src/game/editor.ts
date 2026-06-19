@@ -13,6 +13,8 @@ export interface MapEditorTool {
   zoneMode: MapEditorMode;
   selectedAsset: AssetId;
   selectedZoneType: MapEditorZoneType;
+  pendingBroadcastFor?: string;
+  pendingBroadcastName?: string;
 }
 
 export const BUILD_ASSETS = [

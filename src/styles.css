@@ -510,6 +510,58 @@ button:disabled {
   font-weight: 600;
 }
 
+.office-claim-panel {
+  position: absolute;
+  left: 16px;
+  top: 58px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(340px, calc(100% - 32px));
+  padding: 8px;
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  background: var(--glass);
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.26);
+  backdrop-filter: blur(18px);
+}
+
+.office-claim-panel span {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.office-claim-panel strong,
+.office-claim-panel small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.office-claim-panel strong {
+  color: #fff7e8;
+  font-size: 13px;
+}
+
+.office-claim-panel small {
+  color: #cfc3ac;
+  font-size: 11px;
+}
+
+.office-claim-panel button {
+  flex: 0 0 auto;
+  height: 32px;
+  border: 1px solid rgba(73, 197, 143, 0.42);
+  border-radius: 7px;
+  padding: 0 10px;
+  background: rgba(73, 197, 143, 0.14);
+  color: #a9f0cd;
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .media-panel {
   min-width: 0;
   border-left: 1px solid var(--border);
@@ -1099,6 +1151,17 @@ button:disabled {
   display: grid;
   grid-template-columns: repeat(var(--editor-columns, 2), minmax(0, 1fr));
   gap: 8px;
+}
+
+.editor-hint {
+  padding: 9px 10px;
+  border: 1px solid rgba(216, 112, 232, 0.36);
+  border-radius: 7px;
+  background: rgba(216, 112, 232, 0.12);
+  color: #f0c8f5;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
 }
 
 .zone-editor-list {
