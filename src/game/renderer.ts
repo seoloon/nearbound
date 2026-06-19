@@ -73,13 +73,21 @@ function drawFloorObjects(ctx: CanvasRenderingContext2D, map: OfficeMap, images:
 function drawFloors(ctx: CanvasRenderingContext2D, map: OfficeMap, images: ImageMap) {
   for (let y = 0; y < map.height; y += TILE) {
     for (let x = 0; x < map.width; x += TILE) {
-      const area = map.floorAreas.find(
-        (zone) => x >= zone.x && x < zone.x + zone.w && y >= zone.y && y < zone.y + zone.h
-      );
+      const area = floorAreaAt(map, x, y);
       const image = images[area?.asset || "floor_wood"];
       ctx.drawImage(image, x, y);
     }
   }
+}
+
+function floorAreaAt(map: OfficeMap, x: number, y: number) {
+  for (let index = map.floorAreas.length - 1; index >= 0; index -= 1) {
+    const area = map.floorAreas[index];
+    if (x >= area.x && x < area.x + area.w && y >= area.y && y < area.y + area.h) {
+      return area;
+    }
+  }
+  return undefined;
 }
 
 function drawZones(ctx: CanvasRenderingContext2D, map: OfficeMap) {

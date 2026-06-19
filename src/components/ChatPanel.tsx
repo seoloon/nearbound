@@ -2,6 +2,7 @@ import { LogOut, Map as MapIcon, Maximize2, MessageSquare, PanelRightClose, Send
 import { RemoteParticipant, RemoteTrackPublication, Room, Track } from "livekit-client";
 import type { CSSProperties, Dispatch, FormEvent, ReactElement, SetStateAction } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { MapEditorTool } from "../game/editor";
 import { getAudibility, type OfficeMap } from "../game/map";
 import type { ChatMessage, PlayerPresence } from "../types";
 import { MapEditorPanel } from "./MapEditorPanel";
@@ -19,6 +20,8 @@ interface ChatPanelProps {
   error?: string;
   mediaError?: string;
   editorOpen: boolean;
+  editorTool: MapEditorTool;
+  onEditorToolChange: (tool: MapEditorTool) => void;
   onSendMessage: (text: string) => void;
   onLeave: () => void;
   onEditorToggle: () => void;
@@ -61,6 +64,8 @@ export function ChatPanel({
   error,
   mediaError,
   editorOpen,
+  editorTool,
+  onEditorToolChange,
   onSendMessage,
   onLeave,
   onEditorToggle
@@ -130,7 +135,12 @@ export function ChatPanel({
     return (
       <>
         {audioLayer}
-        <MapEditorPanel map={map} onClose={onEditorToggle} />
+        <MapEditorPanel
+          map={map}
+          tool={editorTool}
+          onToolChange={onEditorToolChange}
+          onClose={onEditorToggle}
+        />
         {expandedStream && (
           <StreamModal
             publication={expandedStream}

@@ -1060,18 +1060,19 @@ button:disabled {
 .editor-section {
   min-height: 0;
   height: 100%;
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 12px;
 }
 
 .editor-tool-row {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--editor-columns, 2), minmax(0, 1fr));
   gap: 8px;
 }
 
 .zone-editor-list {
+  flex: 1 1 auto;
   min-height: 0;
   display: grid;
   align-content: start;
@@ -1130,16 +1131,13 @@ button:disabled {
 }
 
 .asset-palette {
+  flex: 1 1 auto;
   min-height: 0;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
   gap: 8px;
   overflow-y: auto;
   padding-right: 2px;
-}
-
-.editor-section > .asset-palette:only-child {
-  grid-row: 1 / -1;
 }
 
 .asset-palette button {
