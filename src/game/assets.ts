@@ -37,7 +37,20 @@ export const OFFICE_ASSETS = {
   plant_arch: "plant_arch.png",
   cabinet_big: "cabinet_big.png",
   coffee_machine: "coffee_machine.png",
-  water_feature: "water_feature.png"
+  water_feature: "water_feature.png",
+  rug_red: "rug_red.png",
+  rug_blue: "rug_blue.png",
+  rug_green: "rug_green.png",
+  rug_white: "rug_white.png",
+  server_rack: "server_rack.png",
+  sci_fi_console: "sci_fi_console.png",
+  sci_fi_desk: "sci_fi_desk.png",
+  microscope: "microscope.png",
+  portable_camera: "portable_camera.png",
+  vital_monitor: "vital_monitor.png",
+  loot_chest: "loot_chest.png",
+  chemistry_flasks: "chemistry_flasks.png",
+  mana_pool: "mana_pool.png"
 } as const;
 
 export type AssetId = keyof typeof OFFICE_ASSETS;

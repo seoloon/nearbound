@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ChatPanel } from "./components/ChatPanel";
 import { ControlsBar } from "./components/ControlsBar";
 import { LoginScreen } from "./components/LoginScreen";
 import { LocalScreenPreview } from "./components/ScreenPreview";
 import { avatarAccent } from "./avatar";
 import { WorldCanvas } from "./components/WorldCanvas";
+import { DEFAULT_MAP_EDITOR_TOOL, type MapEditorTool } from "./game/editor";
 import { createOfficeMap, getZoneAt } from "./game/map";
 import { useLiveKitRoom } from "./livekit/useLiveKitRoom";
 import type { AppConfig, PlayerPresence, Session, UserStatus } from "./types";
@@ -16,10 +17,12 @@ const DEFAULT_CONFIG: AppConfig = {
 };
 
 export function App() {
-  const map = useMemo(() => createOfficeMap(), []);
+  const [map, setMap] = useState(() => createOfficeMap());
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [local, setLocal] = useState<PlayerPresence | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editorTool, setEditorTool] = useState<MapEditorTool>(DEFAULT_MAP_EDITOR_TOOL);
 
   useEffect(() => {
     let cancelled = false;
@@ -65,7 +68,12 @@ export function App() {
     setLocal(presence);
   }, []);
 
+  const handleMapChange = useCallback((updater: (current: ReturnType<typeof createOfficeMap>) => ReturnType<typeof createOfficeMap>) => {
+    setMap((current) => updater(current));
+  }, []);
+
   const handleLeave = useCallback(() => {
+    setEditorOpen(false);
     setSession(null);
     setLocal(null);
   }, []);
@@ -99,6 +107,9 @@ export function App() {
         room={livekit.room}
         cameraActive={livekit.media.camera}
         mediaVersion={livekit.mediaVersion}
+        showEditorGrid={editorOpen}
+        editorTool={editorTool}
+        onMapChange={handleMapChange}
         onLocalChange={handleLocalChange}
       />
       <LocalScreenPreview room={livekit.room} active={livekit.media.screen} mediaVersion={livekit.mediaVersion} />
@@ -113,8 +124,12 @@ export function App() {
         status={livekit.status}
         error={livekit.error}
         mediaError={livekit.mediaError}
+        editorOpen={editorOpen}
+        editorTool={editorTool}
+        onEditorToolChange={setEditorTool}
         onSendMessage={(text) => void livekit.sendChat(text)}
         onLeave={handleLeave}
+        onEditorToggle={() => setEditorOpen((value) => !value)}
       />
       <ControlsBar
         connected={connected}
