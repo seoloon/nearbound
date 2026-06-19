@@ -295,6 +295,13 @@ button:disabled {
   color: #9be6c2;
 }
 
+.option-grid.is-dense button {
+  min-width: 78px;
+  min-height: 30px;
+  padding: 0 8px;
+  font-size: 11px;
+}
+
 .color-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(28px, 1fr));
@@ -346,6 +353,29 @@ button:disabled {
   background: linear-gradient(180deg, #66d49f, #2fae74);
   color: #102219;
   font-weight: 800;
+}
+
+.secondary-action {
+  min-height: 38px;
+  border: 1px solid rgba(73, 197, 143, 0.38);
+  border-radius: 7px;
+  padding: 0 12px;
+  background: rgba(73, 197, 143, 0.14);
+  color: #a9f0cd;
+  font-weight: 800;
+}
+
+.avatar-dna-field {
+  margin-bottom: 0;
+}
+
+.avatar-dna-field input {
+  font-family: "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+}
+
+.avatar-dna-field.has-error input {
+  border-color: rgba(237, 66, 69, 0.72);
+  box-shadow: 0 0 0 3px rgba(237, 66, 69, 0.12);
 }
 
 .app-shell {

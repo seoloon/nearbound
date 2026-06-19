@@ -1,31 +1,18 @@
-import type { CSSProperties, FormEvent } from "react";
-import { useState } from "react";
+import type { FormEvent } from "react";
+import { useMemo, useState } from "react";
 import {
-  AVATAR_ACCESSORIES,
-  AVATAR_BOTTOMS,
-  AVATAR_GENDERS,
-  AVATAR_HAIR,
-  AVATAR_SHOES,
-  AVATAR_TOPS,
-  BOTTOM_COLORS,
+  AVATAR_PART_KEYS,
+  AVATAR_PART_LABELS,
+  AVATAR_PART_OPTIONS,
   DEFAULT_AVATAR_STYLE,
-  HAIR_COLORS,
-  SHOE_COLORS,
-  SKIN_COLORS,
-  TOP_COLORS,
-  normalizeAvatarStyle
+  avatarDnaParts,
+  isAvatarDna,
+  normalizeAvatarStyle,
+  randomAvatarStyle,
+  updateAvatarDna,
+  updateAvatarPart
 } from "../avatar";
-import type {
-  AppConfig,
-  AvatarAccessory,
-  AvatarBottom,
-  AvatarGender,
-  AvatarHair,
-  AvatarShoes,
-  AvatarStyle,
-  AvatarTop,
-  Session
-} from "../types";
+import type { AppConfig, AvatarPartKey, AvatarStyle, Session } from "../types";
 import { PixelAvatar } from "./PixelAvatar";
 
 interface LoginScreenProps {
@@ -35,7 +22,9 @@ interface LoginScreenProps {
 
 export function LoginScreen({ config, onJoin }: LoginScreenProps) {
   const [avatar, setAvatar] = useState<AvatarStyle>(() => normalizeAvatarStyle(DEFAULT_AVATAR_STYLE));
+  const [dnaDraft, setDnaDraft] = useState(avatar.dna);
   const [previewDirection, setPreviewDirection] = useState<"down" | "up">("down");
+  const dnaParts = useMemo(() => avatarDnaParts(avatar), [avatar]);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -46,8 +35,24 @@ export function LoginScreen({ config, onJoin }: LoginScreenProps) {
     onJoin({ identity, name, room, color: avatar.topColor, avatar });
   }
 
-  function patchAvatar(next: Partial<AvatarStyle>) {
-    setAvatar((current) => normalizeAvatarStyle({ ...current, ...next }));
+  function commitAvatar(next: AvatarStyle) {
+    setAvatar(next);
+    setDnaDraft(next.dna);
+  }
+
+  function patchPart(key: AvatarPartKey, value: number) {
+    commitAvatar(updateAvatarPart(avatar, key, value));
+  }
+
+  function randomizeAvatar() {
+    commitAvatar(randomAvatarStyle());
+  }
+
+  function handleDnaChange(value: string) {
+    setDnaDraft(value);
+    if (isAvatarDna(value)) {
+      setAvatar(updateAvatarDna(avatar, value));
+    }
   }
 
   return (
@@ -108,87 +113,32 @@ export function LoginScreen({ config, onJoin }: LoginScreenProps) {
                   Back
                 </button>
               </div>
+              <button className="secondary-action" type="button" onClick={randomizeAvatar}>
+                Randomize avatar
+              </button>
             </div>
           </section>
 
           <section className="character-builder" aria-label="Character">
             <div className="character-options">
-              <OptionGroup
-                label="Sex"
-                value={avatar.gender}
-                options={AVATAR_GENDERS}
-                onChange={(gender) => patchAvatar({ gender })}
-              />
+              <label className={`field avatar-dna-field ${dnaDraft && !isAvatarDna(dnaDraft) ? "has-error" : ""}`}>
+                <span>DNA</span>
+                <input
+                  value={dnaDraft}
+                  spellCheck={false}
+                  placeholder="0-1-0-0-0-0"
+                  onChange={(event) => handleDnaChange(event.target.value)}
+                />
+              </label>
 
-              <ColorGroup
-                label="Skin"
-                value={avatar.skin}
-                colors={SKIN_COLORS}
-                onChange={(skin) => patchAvatar({ skin })}
-              />
-
-              <OptionGroup
-                label="Hair"
-                value={avatar.hair}
-                options={AVATAR_HAIR}
-                onChange={(hair) => patchAvatar({ hair })}
-              />
-
-              <ColorGroup
-                label="Hair color"
-                value={avatar.hairColor}
-                colors={HAIR_COLORS}
-                onChange={(hairColor) => patchAvatar({ hairColor })}
-              />
-
-              <OptionGroup
-                label="Top"
-                value={avatar.top}
-                options={AVATAR_TOPS}
-                onChange={(top) => patchAvatar({ top })}
-              />
-
-              <ColorGroup
-                label="Top color"
-                value={avatar.topColor}
-                colors={TOP_COLORS}
-                onChange={(topColor) => patchAvatar({ topColor })}
-              />
-
-              <OptionGroup
-                label="Bottom"
-                value={avatar.bottom}
-                options={AVATAR_BOTTOMS}
-                onChange={(bottom) => patchAvatar({ bottom })}
-              />
-
-              <ColorGroup
-                label="Bottom color"
-                value={avatar.bottomColor}
-                colors={BOTTOM_COLORS}
-                onChange={(bottomColor) => patchAvatar({ bottomColor })}
-              />
-
-              <OptionGroup
-                label="Shoes"
-                value={avatar.shoes}
-                options={AVATAR_SHOES}
-                onChange={(shoes) => patchAvatar({ shoes })}
-              />
-
-              <ColorGroup
-                label="Shoe color"
-                value={avatar.shoeColor}
-                colors={SHOE_COLORS}
-                onChange={(shoeColor) => patchAvatar({ shoeColor })}
-              />
-
-              <OptionGroup
-                label="Accessory"
-                value={avatar.accessory}
-                options={AVATAR_ACCESSORIES}
-                onChange={(accessory) => patchAvatar({ accessory })}
-              />
+              {AVATAR_PART_KEYS.map((key) => (
+                <PartGroup
+                  key={key}
+                  partKey={key}
+                  value={dnaParts[key]}
+                  onChange={(value) => patchPart(key, value)}
+                />
+              ))}
             </div>
           </section>
         </section>
@@ -197,22 +147,20 @@ export function LoginScreen({ config, onJoin }: LoginScreenProps) {
   );
 }
 
-function OptionGroup<T extends AvatarGender | AvatarHair | AvatarTop | AvatarBottom | AvatarShoes | AvatarAccessory>({
-  label,
+function PartGroup({
+  partKey,
   value,
-  options,
   onChange
 }: {
-  label: string;
-  value: T;
-  options: Array<{ id: T; label: string }>;
-  onChange: (value: T) => void;
+  partKey: AvatarPartKey;
+  value: number;
+  onChange: (value: number) => void;
 }) {
   return (
     <fieldset className="character-group">
-      <legend>{label}</legend>
-      <div className="option-grid">
-        {options.map((option) => (
+      <legend>{AVATAR_PART_LABELS[partKey]}</legend>
+      <div className="option-grid is-dense">
+        {AVATAR_PART_OPTIONS[partKey].map((option) => (
           <button
             key={option.id}
             className={option.id === value ? "is-active" : ""}
@@ -220,38 +168,6 @@ function OptionGroup<T extends AvatarGender | AvatarHair | AvatarTop | AvatarBot
             onClick={() => onChange(option.id)}
           >
             {option.label}
-          </button>
-        ))}
-      </div>
-    </fieldset>
-  );
-}
-
-function ColorGroup({
-  label,
-  value,
-  colors,
-  onChange
-}: {
-  label: string;
-  value: string;
-  colors: string[];
-  onChange: (value: string) => void;
-}) {
-  return (
-    <fieldset className="character-group">
-      <legend>{label}</legend>
-      <div className="color-grid">
-        {colors.map((color) => (
-          <button
-            key={color}
-            className={color === value ? "is-active" : ""}
-            type="button"
-            style={{ "--swatch": color } as CSSProperties}
-            onClick={() => onChange(color)}
-            aria-label={`${label} ${color}`}
-          >
-            <span />
           </button>
         ))}
       </div>
