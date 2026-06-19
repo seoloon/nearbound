@@ -28,6 +28,8 @@ export interface PlayerPresence {
   direction: Direction;
   moving: boolean;
   zoneId?: string;
+  claimedOfficeId?: string;
+  claimedOfficeName?: string;
   lastSeen: number;
 }
 

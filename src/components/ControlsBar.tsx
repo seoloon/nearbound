@@ -12,6 +12,8 @@ interface ControlsBarProps {
   deafened: boolean;
   camera: boolean;
   screen: boolean;
+  canPublishMedia: boolean;
+  mediaBlockedReason?: string;
   onToggleMic: () => void;
   onToggleDeafen: () => void;
   onToggleCamera: () => void;
@@ -33,6 +35,8 @@ export function ControlsBar({
   deafened,
   camera,
   screen,
+  canPublishMedia,
+  mediaBlockedReason,
   onToggleMic,
   onToggleDeafen,
   onToggleCamera,
@@ -40,6 +44,8 @@ export function ControlsBar({
   onProfileChange
 }: ControlsBarProps) {
   const [expanded, setExpanded] = useState(false);
+  const mediaDisabled = !connected || !canPublishMedia;
+  const disabledMediaLabel = canPublishMedia ? undefined : mediaBlockedReason || "Broadcast zone required";
 
   return (
     <div className="dock-wrap">
@@ -66,16 +72,31 @@ export function ControlsBar({
           </span>
         </button>
         <div className="control-group">
-          <IconButton label={mic ? "Mute" : "Unmute"} active={mic} onClick={onToggleMic} disabled={!connected}>
+          <IconButton
+            label={disabledMediaLabel || (mic ? "Mute" : "Unmute")}
+            active={mic}
+            onClick={onToggleMic}
+            disabled={mediaDisabled}
+          >
             {mic ? <Mic size={20} /> : <MicOff size={20} />}
           </IconButton>
           <IconButton label={deafened ? "Undeafen" : "Deafen"} active={deafened} onClick={onToggleDeafen}>
             {deafened ? <VolumeX size={20} /> : <Headphones size={20} />}
           </IconButton>
-          <IconButton label={camera ? "Turn camera off" : "Turn camera on"} active={camera} onClick={onToggleCamera} disabled={!connected}>
+          <IconButton
+            label={disabledMediaLabel || (camera ? "Turn camera off" : "Turn camera on")}
+            active={camera}
+            onClick={onToggleCamera}
+            disabled={mediaDisabled}
+          >
             {camera ? <Camera size={20} /> : <CameraOff size={20} />}
           </IconButton>
-          <IconButton label={screen ? "Stop streaming" : "Stream"} active={screen} onClick={onToggleScreen} disabled={!connected}>
+          <IconButton
+            label={disabledMediaLabel || (screen ? "Stop streaming" : "Stream")}
+            active={screen}
+            onClick={onToggleScreen}
+            disabled={mediaDisabled}
+          >
             {screen ? <ScreenShareOff size={20} /> : <MonitorUp size={20} />}
           </IconButton>
         </div>

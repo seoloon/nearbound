@@ -13,7 +13,7 @@ import {
   ZONE_TYPE_OPTIONS,
   isBuildAsset
 } from "../game/editor";
-import { TILE, type OfficeMap } from "../game/map";
+import { getZoneType, TILE, type OfficeMap } from "../game/map";
 
 const EDITOR_TABS: Array<{ id: MapEditorTab; label: string; icon: typeof Layers }> = [
   { id: "zone", label: "Zone", icon: Layers },
@@ -42,7 +42,12 @@ export function MapEditorPanel({ map, tool, onToolChange, onClose }: MapEditorPa
     let selectedAsset = tool.selectedAsset;
     if (activeTab === "build" && !isBuildAsset(selectedAsset)) selectedAsset = BUILD_ASSETS[0];
     if (activeTab === "props" && isBuildAsset(selectedAsset)) selectedAsset = propAssets[0];
-    updateTool({ activeTab, selectedAsset });
+    updateTool({
+      activeTab,
+      selectedAsset,
+      pendingBroadcastFor: activeTab === "zone" ? tool.pendingBroadcastFor : undefined,
+      pendingBroadcastName: activeTab === "zone" ? tool.pendingBroadcastName : undefined
+    });
   }
 
   return (
@@ -101,17 +106,38 @@ function ZoneTab({
   const selectedZoneLabel =
     ZONE_TYPE_OPTIONS.find((zoneType) => zoneType.id === tool.selectedZoneType)?.label || "Zone";
   const filteredZones = map.zones.filter((zone) => zoneTypeForList(zone) === tool.selectedZoneType);
+  const placingBroadcast = tool.selectedZoneType === "meeting" && tool.action === "place" && tool.pendingBroadcastFor;
 
   return (
     <div className="editor-section">
       <ToggleRow
         options={ZONE_TYPE_OPTIONS.map((zoneType) => ({ id: zoneType.id, label: zoneType.label }))}
         value={tool.selectedZoneType}
-        onChange={(selectedZoneType) => onToolChange({ selectedZoneType })}
+        onChange={(selectedZoneType) =>
+          onToolChange({
+            selectedZoneType,
+            pendingBroadcastFor: undefined,
+            pendingBroadcastName: undefined
+          })
+        }
         columns={2}
       />
       <ModeRow value={tool.zoneMode} onChange={(zoneMode) => onToolChange({ zoneMode })} />
-      <ActionRow value={tool.action} onChange={(action) => onToolChange({ action })} />
+      <ActionRow
+        value={tool.action}
+        onChange={(action) =>
+          onToolChange({
+            action,
+            pendingBroadcastFor: action === "place" ? tool.pendingBroadcastFor : undefined,
+            pendingBroadcastName: action === "place" ? tool.pendingBroadcastName : undefined
+          })
+        }
+      />
+      {placingBroadcast && (
+        <div className="editor-hint">
+          Place the Broadcast area for {tool.pendingBroadcastName || "this meeting"}.
+        </div>
+      )}
       <div className="zone-editor-list">
         {filteredZones.length === 0 ? (
           <div className="empty-chat">No {selectedZoneLabel.toLowerCase()} zones yet.</div>
@@ -121,7 +147,7 @@ function ZoneTab({
               <span className={`zone-kind is-${zone.kind}`} />
               <div>
                 <strong>{zone.name}</strong>
-                <small>{zone.kind} - {zone.w / TILE} x {zone.h / TILE}</small>
+                <small>{zone.subType === "broadcast" ? "broadcast" : zone.kind} - {zone.w / TILE} x {zone.h / TILE}</small>
               </div>
             </article>
           ))
@@ -276,8 +302,5 @@ function assetLabel(asset: AssetId) {
 }
 
 function zoneTypeForList(zone: OfficeMap["zones"][number]): MapEditorZoneType {
-  if (zone.type) return zone.type;
-  if (zone.blocks) return "hitbox";
-  if (zone.kind === "social") return "living";
-  return "office";
+  return getZoneType(zone) || "office";
 }

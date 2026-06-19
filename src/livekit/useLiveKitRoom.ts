@@ -8,7 +8,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { normalizeAvatarStyle } from "../avatar";
 import type { AvatarStyle, ChatMessage, LiveKitTokenResponse, PlayerPresence, Session, UserStatus } from "../types";
-import { getAudibility, type OfficeMap, TILE } from "../game/map";
+import { getAudibility, getLocalMediaAccess, type OfficeMap, TILE } from "../game/map";
 
 type ConnectionStatus = "preview" | "connecting" | "connected" | "error";
 
@@ -32,6 +32,8 @@ interface PresencePacket {
   direction: PlayerPresence["direction"];
   moving: boolean;
   zoneId?: string;
+  claimedOfficeId?: string;
+  claimedOfficeName?: string;
   t: number;
 }
 
@@ -153,6 +155,8 @@ export function useLiveKitRoom(
             direction: packet.direction || "down",
             moving: Boolean(packet.moving),
             zoneId: packet.zoneId,
+            claimedOfficeId: packet.claimedOfficeId,
+            claimedOfficeName: packet.claimedOfficeName,
             lastSeen: Date.now()
           }
         }));
@@ -226,7 +230,18 @@ export function useLiveKitRoom(
     if (now - lastPublishedRef.current < 50) return;
     lastPublishedRef.current = now;
     publishPresence(room, local, false);
-  }, [room, local?.x, local?.y, local?.direction, local?.moving, local?.zoneId, local?.status, local?.bio]);
+  }, [
+    room,
+    local?.x,
+    local?.y,
+    local?.direction,
+    local?.moving,
+    local?.zoneId,
+    local?.status,
+    local?.bio,
+    local?.claimedOfficeId,
+    local?.claimedOfficeName
+  ]);
 
   useEffect(() => {
     if (!room) return;
@@ -248,8 +263,40 @@ export function useLiveKitRoom(
     });
   }, [room, local?.x, local?.y, local?.zoneId, remotePresences, map, mediaVersion]);
 
+  useEffect(() => {
+    if (!room || !local) return;
+    const currentRoom = room;
+    const access = getLocalMediaAccess(local, map);
+    if (access.canPublish) return;
+    let cancelled = false;
+    async function disableForbiddenMedia() {
+      try {
+        if (media.mic) await currentRoom.localParticipant.setMicrophoneEnabled(false);
+        if (media.camera) await currentRoom.localParticipant.setCameraEnabled(false);
+        if (media.screen) await currentRoom.localParticipant.setScreenShareEnabled(false);
+        if (!cancelled && (media.mic || media.camera || media.screen)) {
+          setMedia((current) => ({ ...current, mic: false, camera: false, screen: false }));
+          setMediaError(access.reason);
+        }
+      } catch (disableError) {
+        if (!cancelled) {
+          setMediaError(disableError instanceof Error ? disableError.message : access.reason);
+        }
+      }
+    }
+    void disableForbiddenMedia();
+    return () => {
+      cancelled = true;
+    };
+  }, [room, local?.x, local?.y, local?.zoneId, map, media.mic, media.camera, media.screen]);
+
   const toggleMic = useCallback(async () => {
-    if (!room) return;
+    if (!room || !localRef.current) return;
+    const access = getLocalMediaAccess(localRef.current, map);
+    if (!access.canPublish) {
+      setMediaError(access.reason);
+      return;
+    }
     const next = !media.mic;
     try {
       await room.localParticipant.setMicrophoneEnabled(next);
@@ -258,14 +305,19 @@ export function useLiveKitRoom(
     } catch (toggleError) {
       setMediaError(toggleError instanceof Error ? toggleError.message : "Microphone is not available.");
     }
-  }, [room, media.mic]);
+  }, [room, map, media.mic]);
 
   const toggleDeafen = useCallback(() => {
     setMedia((current) => ({ ...current, deafened: !current.deafened }));
   }, []);
 
   const toggleCamera = useCallback(async () => {
-    if (!room) return;
+    if (!room || !localRef.current) return;
+    const access = getLocalMediaAccess(localRef.current, map);
+    if (!access.canPublish) {
+      setMediaError(access.reason);
+      return;
+    }
     const next = !media.camera;
     try {
       await room.localParticipant.setCameraEnabled(next);
@@ -274,10 +326,15 @@ export function useLiveKitRoom(
     } catch (toggleError) {
       setMediaError(toggleError instanceof Error ? toggleError.message : "Camera is not available.");
     }
-  }, [room, media.camera]);
+  }, [room, map, media.camera]);
 
   const toggleScreen = useCallback(async () => {
-    if (!room) return;
+    if (!room || !localRef.current) return;
+    const access = getLocalMediaAccess(localRef.current, map);
+    if (!access.canPublish) {
+      setMediaError(access.reason);
+      return;
+    }
     const next = !media.screen;
     try {
       await room.localParticipant.setScreenShareEnabled(next);
@@ -286,7 +343,7 @@ export function useLiveKitRoom(
     } catch (toggleError) {
       setMediaError(toggleError instanceof Error ? toggleError.message : "Screen sharing is not available.");
     }
-  }, [room, media.screen]);
+  }, [room, map, media.screen]);
 
   const sendChat = useCallback(
     async (text: string) => {
@@ -351,6 +408,8 @@ function publishPresence(room: Room, local: PlayerPresence | null, reliable: boo
     direction: local.direction,
     moving: local.moving,
     zoneId: local.zoneId,
+    claimedOfficeId: local.claimedOfficeId,
+    claimedOfficeName: local.claimedOfficeName,
     t: Date.now()
   };
 
@@ -412,6 +471,8 @@ function fallbackPresence(participant: RemoteParticipant, map: OfficeMap): Playe
     y: map.spawn.y + (((seed >> 4) % 5) - 2) * TILE,
     direction: "down",
     moving: false,
+    claimedOfficeId: undefined,
+    claimedOfficeName: undefined,
     lastSeen: Date.now()
   };
 }

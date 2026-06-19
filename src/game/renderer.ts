@@ -1,6 +1,6 @@
 import type { ImageMap } from "./assets";
 import type { OfficeMap } from "./map";
-import { TILE } from "./map";
+import { getZoneType, isBroadcastZone, TILE } from "./map";
 import { drawAvatarSprite } from "../avatar";
 import type { PlayerPresence } from "../types";
 
@@ -92,10 +92,17 @@ function floorAreaAt(map: OfficeMap, x: number, y: number) {
 
 function drawZones(ctx: CanvasRenderingContext2D, map: OfficeMap) {
   for (const zone of map.zones) {
-    if (zone.kind === "open") continue;
+    const type = getZoneType(zone);
+    if (type === "hitbox") continue;
     ctx.save();
-    ctx.globalAlpha = zone.kind === "private" ? 0.2 : 0.12;
-    ctx.fillStyle = zone.kind === "private" ? "#4356a6" : "#2f9667";
+    ctx.globalAlpha = isBroadcastZone(zone) ? 0.22 : type === "office" || type === "meeting" ? 0.16 : 0.12;
+    ctx.fillStyle = isBroadcastZone(zone)
+      ? "#9b4ab6"
+      : type === "meeting"
+        ? "#4356a6"
+        : type === "living"
+          ? "#2f9667"
+          : "#9f762c";
     ctx.fillRect(zone.x, zone.y, zone.w, zone.h);
     ctx.restore();
   }
