@@ -1,10 +1,136 @@
 [
   {
+    "id": "amethyst",
+    "file": "amethyst.png",
+    "category": "decor",
+    "source": "assets/props/universal/amethyst.png",
+    "description": "amethyst prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "anvil",
+    "file": "anvil.png",
+    "category": "decor",
+    "source": "assets/props/universal/anvil.png",
+    "description": "anvil prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "aquarium_sofa",
+    "file": "aquarium_sofa.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/aquarium_sofa.png",
+    "description": "aquarium sofa prop",
+    "width": 61,
+    "height": 32
+  },
+  {
     "id": "armchair_green",
     "file": "armchair_green.png",
     "category": "furniture",
-    "source": "assets/textures/royal_chair.png",
-    "description": "green armchair",
+    "source": "assets/props/living_room/royal_chair.png",
+    "description": "royal armchair",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "barrel",
+    "file": "barrel.png",
+    "category": "furniture",
+    "source": "assets/props/kitchen/barrel.png",
+    "description": "barrel prop",
+    "width": 25,
+    "height": 30
+  },
+  {
+    "id": "battery",
+    "file": "battery.png",
+    "category": "decor",
+    "source": "assets/props/universal/battery.png",
+    "description": "battery prop",
+    "width": 18,
+    "height": 26
+  },
+  {
+    "id": "battery2",
+    "file": "battery2.png",
+    "category": "decor",
+    "source": "assets/props/universal/battery2.png",
+    "description": "battery2 prop",
+    "width": 15,
+    "height": 25
+  },
+  {
+    "id": "battery3",
+    "file": "battery3.png",
+    "category": "decor",
+    "source": "assets/props/universal/battery3.png",
+    "description": "battery3 prop",
+    "width": 20,
+    "height": 30
+  },
+  {
+    "id": "bed1",
+    "file": "bed1.png",
+    "category": "furniture",
+    "source": "assets/props/bedroom/bed1.png",
+    "description": "bed1 prop",
+    "width": 40,
+    "height": 21
+  },
+  {
+    "id": "bibliotheque",
+    "file": "bibliotheque.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/bibliotheque.png",
+    "description": "bibliotheque prop",
+    "width": 26,
+    "height": 56
+  },
+  {
+    "id": "biohazard_box",
+    "file": "biohazard_box.png",
+    "category": "decor",
+    "source": "assets/props/universal/biohazard_box.png",
+    "description": "biohazard box prop",
+    "width": 27,
+    "height": 25
+  },
+  {
+    "id": "black_flag",
+    "file": "black_flag.png",
+    "category": "decor",
+    "source": "assets/props/universal/black_flag.png",
+    "description": "black flag prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "black_medieval_chair",
+    "file": "black_medieval_chair.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/black_medieval_chair.png",
+    "description": "black medieval chair prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "blue_medieval_chair",
+    "file": "blue_medieval_chair.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/blue_medieval_chair.png",
+    "description": "blue medieval chair prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "bonxing_bag3",
+    "file": "bonxing_bag3.png",
+    "category": "decor",
+    "source": "assets/props/universal/bonxing_bag3.png",
+    "description": "bonxing bag3 prop",
     "width": 24,
     "height": 24
   },
@@ -12,7 +138,7 @@
     "id": "bookcase_brown",
     "file": "bookcase_brown.png",
     "category": "furniture",
-    "source": "assets/textures/bibliotheque.png",
+    "source": "assets/props/living_room/bibliotheque.png",
     "description": "large bookcase",
     "width": 26,
     "height": 56
@@ -21,8 +147,62 @@
     "id": "bookcase_small",
     "file": "bookcase_small.png",
     "category": "furniture",
-    "source": "assets/textures/bookshelf4.png",
-    "description": "small shelf",
+    "source": "assets/props/living_room/bookshelf4.png",
+    "description": "small bookcase",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "bookshelf1",
+    "file": "bookshelf1.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/bookshelf1.png",
+    "description": "bookshelf1 prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "bookshelf2",
+    "file": "bookshelf2.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/bookshelf2.png",
+    "description": "bookshelf2 prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "bookshelf4",
+    "file": "bookshelf4.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/bookshelf4.png",
+    "description": "bookshelf4 prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "bookshelf5",
+    "file": "bookshelf5.png",
+    "category": "decor",
+    "source": "assets/props/universal/bookshelf5.png",
+    "description": "bookshelf5 prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "bookshelf6",
+    "file": "bookshelf6.png",
+    "category": "decor",
+    "source": "assets/props/universal/bookshelf6.png",
+    "description": "bookshelf6 prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "bookshelf_3",
+    "file": "bookshelf_3.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/bookshelf_3.png",
+    "description": "bookshelf 3 prop",
     "width": 24,
     "height": 24
   },
@@ -30,25 +210,70 @@
     "id": "bookshelf_lounge",
     "file": "bookshelf_lounge.png",
     "category": "furniture",
-    "source": "assets/textures/bookshelf6.png",
+    "source": "assets/props/universal/bookshelf6.png",
     "description": "filled lounge shelf",
     "width": 24,
     "height": 24
   },
   {
+    "id": "boxing_bag",
+    "file": "boxing_bag.png",
+    "category": "decor",
+    "source": "assets/props/universal/boxing_bag.png",
+    "description": "boxing bag prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "boxing_bag2",
+    "file": "boxing_bag2.png",
+    "category": "decor",
+    "source": "assets/props/universal/boxing_bag2.png",
+    "description": "boxing bag2 prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "bureau",
+    "file": "bureau.png",
+    "category": "furniture",
+    "source": "assets/props/desk/bureau.png",
+    "description": "bureau prop",
+    "width": 53,
+    "height": 37
+  },
+  {
+    "id": "cabine_douche",
+    "file": "cabine_douche.png",
+    "category": "furniture",
+    "source": "assets/props/bathroom/cabine_douche.png",
+    "description": "cabine douche prop",
+    "width": 25,
+    "height": 63
+  },
+  {
     "id": "cabinet_big",
     "file": "cabinet_big.png",
     "category": "furniture",
-    "source": "assets/textures/commode_face.png",
+    "source": "assets/props/living_room/commode_face.png",
     "description": "front-facing cabinet",
     "width": 26,
+    "height": 26
+  },
+  {
+    "id": "cards",
+    "file": "cards.png",
+    "category": "decor",
+    "source": "assets/props/universal/cards.png",
+    "description": "cards prop",
+    "width": 33,
     "height": 26
   },
   {
     "id": "chair_blue",
     "file": "chair_blue.png",
     "category": "furniture",
-    "source": "assets/textures/blue_medieval_chair.png",
+    "source": "assets/props/living_room/blue_medieval_chair.png",
     "description": "blue lounge chair",
     "width": 24,
     "height": 24
@@ -57,7 +282,7 @@
     "id": "chair_red",
     "file": "chair_red.png",
     "category": "furniture",
-    "source": "assets/textures/fauteuil_rouge.png",
+    "source": "assets/props/living_room/fauteuil_rouge.png",
     "description": "red lounge chair",
     "width": 23,
     "height": 23
@@ -66,25 +291,43 @@
     "id": "chair_wood",
     "file": "chair_wood.png",
     "category": "furniture",
-    "source": "assets/textures/white_chair.png",
-    "description": "white office chair",
+    "source": "assets/props/living_room/white_chair.png",
+    "description": "white chair",
     "width": 18,
     "height": 22
+  },
+  {
+    "id": "chemistry_bottle",
+    "file": "chemistry_bottle.png",
+    "category": "decor",
+    "source": "assets/props/universal/chemistry_bottle.png",
+    "description": "chemistry bottle prop",
+    "width": 17,
+    "height": 27
   },
   {
     "id": "chemistry_flasks",
     "file": "chemistry_flasks.png",
     "category": "decor",
-    "source": "assets/textures/chemistry_flasks.png",
+    "source": "assets/props/universal/chemistry_flasks.png",
     "description": "chemistry flasks",
     "width": 26,
     "height": 20
   },
   {
+    "id": "chest_of_drawers",
+    "file": "chest_of_drawers.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/chest_of_drawers.png",
+    "description": "chest of drawers prop",
+    "width": 46,
+    "height": 22
+  },
+  {
     "id": "coffee_machine",
     "file": "coffee_machine.png",
     "category": "interactive",
-    "source": "assets/textures/cooking_robot.png",
+    "source": "assets/props/kitchen/cooking_robot.png",
     "description": "coffee machine",
     "width": 22,
     "height": 21
@@ -93,25 +336,79 @@
     "id": "coffee_table",
     "file": "coffee_table.png",
     "category": "furniture",
-    "source": "assets/textures/wooden_table.png",
+    "source": "assets/props/living_room/wooden_table.png",
     "description": "wooden coffee table",
     "width": 24,
     "height": 24
   },
   {
+    "id": "commode",
+    "file": "commode.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/commode.png",
+    "description": "commode prop",
+    "width": 35,
+    "height": 39
+  },
+  {
+    "id": "commode_arriere",
+    "file": "commode_arriere.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/commode_arriére.png",
+    "description": "commode arriere prop",
+    "width": 22,
+    "height": 31
+  },
+  {
+    "id": "commode_face",
+    "file": "commode_face.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/commode_face.png",
+    "description": "commode face prop",
+    "width": 26,
+    "height": 26
+  },
+  {
     "id": "conference_table",
     "file": "conference_table.png",
     "category": "furniture",
-    "source": "assets/textures/bureau.png",
+    "source": "assets/props/desk/bureau.png",
     "description": "large meeting desk",
     "width": 53,
     "height": 37
   },
   {
+    "id": "cooker_hood",
+    "file": "cooker_hood.png",
+    "category": "furniture",
+    "source": "assets/props/kitchen/cooker_hood.png",
+    "description": "cooker hood prop",
+    "width": 24,
+    "height": 22
+  },
+  {
+    "id": "cooking_hood2",
+    "file": "cooking_hood2.png",
+    "category": "furniture",
+    "source": "assets/props/kitchen/cooking_hood2.png",
+    "description": "cooking hood2 prop",
+    "width": 31,
+    "height": 20
+  },
+  {
+    "id": "cooking_robot",
+    "file": "cooking_robot.png",
+    "category": "furniture",
+    "source": "assets/props/kitchen/cooking_robot.png",
+    "description": "cooking robot prop",
+    "width": 22,
+    "height": 21
+  },
+  {
     "id": "couch_red_small",
     "file": "couch_red_small.png",
     "category": "furniture",
-    "source": "assets/textures/leather_sofa.png",
+    "source": "assets/props/living_room/leather_sofa.png",
     "description": "red leather sofa",
     "width": 46,
     "height": 23
@@ -120,44 +417,179 @@
     "id": "cozy_sofa",
     "file": "cozy_sofa.png",
     "category": "furniture",
-    "source": "assets/textures/aquarium_sofa.png",
+    "source": "assets/props/living_room/aquarium_sofa.png",
     "description": "aquarium sofa",
     "width": 61,
     "height": 32
   },
   {
+    "id": "dark_pruple_sofa",
+    "file": "dark_pruple_sofa.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/dark_pruple_sofa.png",
+    "description": "dark pruple sofa prop",
+    "width": 50,
+    "height": 21
+  },
+  {
+    "id": "death_totem",
+    "file": "death_totem.png",
+    "category": "decor",
+    "source": "assets/props/universal/death_totem.png",
+    "description": "death totem prop",
+    "width": 31,
+    "height": 33
+  },
+  {
     "id": "desk_simple",
     "file": "desk_simple.png",
     "category": "furniture",
-    "source": "assets/textures/bureau.png",
-    "description": "wooden office desk",
+    "source": "assets/props/desk/bureau.png",
+    "description": "office desk",
     "width": 53,
     "height": 37
+  },
+  {
+    "id": "diy_table",
+    "file": "diy_table.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/DIY_table.png",
+    "description": "diy table prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "diy_table2",
+    "file": "diy_table2.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/DIY_table2.png",
+    "description": "diy table2 prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "dracula_chair",
+    "file": "dracula_chair.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/dracula_chair.png",
+    "description": "dracula chair prop",
+    "width": 24,
+    "height": 24
   },
   {
     "id": "dresser_brown",
     "file": "dresser_brown.png",
     "category": "furniture",
-    "source": "assets/textures/chest_of_drawers.png",
+    "source": "assets/props/living_room/chest_of_drawers.png",
     "description": "wooden drawers",
     "width": 46,
     "height": 22
   },
   {
+    "id": "fauteuil_rouge",
+    "file": "fauteuil_rouge.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/fauteuil_rouge.png",
+    "description": "fauteuil rouge prop",
+    "width": 23,
+    "height": 23
+  },
+  {
+    "id": "fenetre",
+    "file": "fenetre.png",
+    "category": "decor",
+    "source": "assets/props/universal/fenêtre.png",
+    "description": "fenetre prop",
+    "width": 27,
+    "height": 28
+  },
+  {
+    "id": "fighting_dummy2",
+    "file": "fighting_dummy2.png",
+    "category": "decor",
+    "source": "assets/props/universal/fighting_dummy2.png",
+    "description": "fighting dummy2 prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "fighting_dummy3",
+    "file": "fighting_dummy3.png",
+    "category": "decor",
+    "source": "assets/props/universal/fighting_dummy3.png",
+    "description": "fighting dummy3 prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "fighting_dummy4",
+    "file": "fighting_dummy4.png",
+    "category": "decor",
+    "source": "assets/props/universal/fighting_dummy4.png",
+    "description": "fighting dummy4 prop",
+    "width": 24,
+    "height": 24
+  },
+  {
     "id": "fireplace",
     "file": "fireplace.png",
     "category": "furniture",
-    "source": "assets/textures/furnace_close.png",
+    "source": "assets/props/living_room/furnace_close.png",
     "description": "closed fireplace",
     "width": 24,
     "height": 24
   },
   {
+    "id": "flag_holder",
+    "file": "flag_holder.png",
+    "category": "decor",
+    "source": "assets/props/universal/flag_holder.png",
+    "description": "flag holder prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "floor_acacia_planks",
+    "file": "floor_acacia_planks.png",
+    "category": "floor",
+    "source": "assets/building/acacia_planks.png",
+    "description": "acacia planks floor tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "floor_bamboo_planks",
+    "file": "floor_bamboo_planks.png",
+    "category": "floor",
+    "source": "assets/building/bamboo_planks.png",
+    "description": "bamboo planks floor tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "floor_birch_planks",
+    "file": "floor_birch_planks.png",
+    "category": "floor",
+    "source": "assets/building/birch_planks.png",
+    "description": "birch planks floor tile",
+    "width": 16,
+    "height": 16
+  },
+  {
     "id": "floor_blue",
     "file": "floor_blue.png",
     "category": "floor",
-    "source": "assets/textures/sol_carreaux_bleu.png",
-    "description": "blue office 16x16 floor tile cropped from source",
+    "source": "assets/building/sol_carreaux_bleu.png",
+    "description": "stable alias for blue tile floor",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "floor_bricks",
+    "file": "floor_bricks.png",
+    "category": "floor",
+    "source": "assets/building/bricks.png",
+    "description": "bricks floor tile",
     "width": 16,
     "height": 16
   },
@@ -165,8 +597,188 @@
     "id": "floor_checker",
     "file": "floor_checker.png",
     "category": "floor",
-    "source": "assets/textures/sol_checkerboard.png",
-    "description": "checker 16x16 floor tile cropped from source",
+    "source": "assets/building/sol_checkerboard.png",
+    "description": "stable alias for checkerboard floor",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "floor_cherry_planks",
+    "file": "floor_cherry_planks.png",
+    "category": "floor",
+    "source": "assets/building/cherry_planks.png",
+    "description": "cherry planks floor tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "floor_cobblestone",
+    "file": "floor_cobblestone.png",
+    "category": "floor",
+    "source": "assets/building/cobblestone.png",
+    "description": "cobblestone floor tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "floor_dark_oak_planks",
+    "file": "floor_dark_oak_planks.png",
+    "category": "floor",
+    "source": "assets/building/dark_oak_planks.png",
+    "description": "dark oak planks floor tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "floor_deepslate_bricks",
+    "file": "floor_deepslate_bricks.png",
+    "category": "floor",
+    "source": "assets/building/deepslate_bricks.png",
+    "description": "deepslate bricks floor tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "floor_deepslate_tiles",
+    "file": "floor_deepslate_tiles.png",
+    "category": "floor",
+    "source": "assets/building/deepslate_tiles.png",
+    "description": "deepslate tiles floor tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "floor_glass",
+    "file": "floor_glass.png",
+    "category": "floor",
+    "source": "assets/building/glass.png",
+    "description": "glass floor tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "floor_green_stained_glass",
+    "file": "floor_green_stained_glass.png",
+    "category": "floor",
+    "source": "assets/building/green_stained_glass.png",
+    "description": "green stained glass floor tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "floor_jungle_planks",
+    "file": "floor_jungle_planks.png",
+    "category": "floor",
+    "source": "assets/building/jungle_planks.png",
+    "description": "jungle planks floor tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "floor_light_blue_stained_glass",
+    "file": "floor_light_blue_stained_glass.png",
+    "category": "floor",
+    "source": "assets/building/light_blue_stained_glass.png",
+    "description": "light blue stained glass floor tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "floor_light_gray_stained_glass",
+    "file": "floor_light_gray_stained_glass.png",
+    "category": "floor",
+    "source": "assets/building/light_gray_stained_glass.png",
+    "description": "light gray stained glass floor tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "floor_magenta_stained_glass",
+    "file": "floor_magenta_stained_glass.png",
+    "category": "floor",
+    "source": "assets/building/magenta_stained_glass.png",
+    "description": "magenta stained glass floor tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "floor_oak_planks",
+    "file": "floor_oak_planks.png",
+    "category": "floor",
+    "source": "assets/building/oak_planks.png",
+    "description": "oak planks floor tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "floor_pink_stained_glass",
+    "file": "floor_pink_stained_glass.png",
+    "category": "floor",
+    "source": "assets/building/pink_stained_glass.png",
+    "description": "pink stained glass floor tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "floor_red_stained_glass",
+    "file": "floor_red_stained_glass.png",
+    "category": "floor",
+    "source": "assets/building/red_stained_glass.png",
+    "description": "red stained glass floor tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "floor_sol_carreaux_bleu",
+    "file": "floor_sol_carreaux_bleu.png",
+    "category": "floor",
+    "source": "assets/building/sol_carreaux_bleu.png",
+    "description": "sol carreaux bleu floor tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "floor_sol_checkerboard",
+    "file": "floor_sol_checkerboard.png",
+    "category": "floor",
+    "source": "assets/building/sol_checkerboard.png",
+    "description": "sol checkerboard floor tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "floor_spruce_planks",
+    "file": "floor_spruce_planks.png",
+    "category": "floor",
+    "source": "assets/building/spruce_planks.png",
+    "description": "spruce planks floor tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "floor_stone",
+    "file": "floor_stone.png",
+    "category": "floor",
+    "source": "assets/building/stone.png",
+    "description": "stone floor tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "floor_stone_bricks",
+    "file": "floor_stone_bricks.png",
+    "category": "floor",
+    "source": "assets/building/stone_bricks.png",
+    "description": "stone bricks floor tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "floor_white_stained_glass",
+    "file": "floor_white_stained_glass.png",
+    "category": "floor",
+    "source": "assets/building/white_stained_glass.png",
+    "description": "white stained glass floor tile",
     "width": 16,
     "height": 16
   },
@@ -174,35 +786,233 @@
     "id": "floor_wood",
     "file": "floor_wood.png",
     "category": "floor",
-    "source": "assets/textures/sol_chene_bois.png",
-    "description": "warm wood 16x16 floor tile cropped from source",
+    "source": "assets/building/oak_planks.png",
+    "description": "stable alias for oak plank floor",
     "width": 16,
     "height": 16
+  },
+  {
+    "id": "floor_yellow_stained_glass",
+    "file": "floor_yellow_stained_glass.png",
+    "category": "floor",
+    "source": "assets/building/yellow_stained_glass.png",
+    "description": "yellow stained glass floor tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "flower_pot",
+    "file": "flower_pot.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/flower_pot.png",
+    "description": "flower pot prop",
+    "width": 24,
+    "height": 24
   },
   {
     "id": "fridge",
     "file": "fridge.png",
     "category": "furniture",
-    "source": "assets/textures/server_rack.png",
+    "source": "assets/props/desk/server_rack.png",
     "description": "server rack used as utility cabinet",
     "width": 22,
     "height": 28
   },
   {
+    "id": "furnace_close",
+    "file": "furnace_close.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/furnace_close.png",
+    "description": "furnace close prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "furnace_open",
+    "file": "furnace_open.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/furnace_open.png",
+    "description": "furnace open prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "green_flag",
+    "file": "green_flag.png",
+    "category": "decor",
+    "source": "assets/props/universal/green_flag.png",
+    "description": "green flag prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "green_princess_bed",
+    "file": "green_princess_bed.png",
+    "category": "furniture",
+    "source": "assets/props/bedroom/green_princess_bed.png",
+    "description": "green princess bed prop",
+    "width": 38,
+    "height": 28
+  },
+  {
+    "id": "harrow",
+    "file": "harrow.png",
+    "category": "decor",
+    "source": "assets/props/universal/harrow.png",
+    "description": "harrow prop",
+    "width": 32,
+    "height": 15
+  },
+  {
+    "id": "heart_flag",
+    "file": "heart_flag.png",
+    "category": "decor",
+    "source": "assets/props/universal/heart_flag.png",
+    "description": "heart flag prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "industrial_barrel",
+    "file": "industrial_barrel.png",
+    "category": "decor",
+    "source": "assets/props/universal/industrial_barrel.png",
+    "description": "industrial barrel prop",
+    "width": 16,
+    "height": 24
+  },
+  {
+    "id": "iron_helmet_rack",
+    "file": "iron_helmet_rack.png",
+    "category": "decor",
+    "source": "assets/props/universal/iron_helmet_rack.png",
+    "description": "iron helmet rack prop",
+    "width": 42,
+    "height": 36
+  },
+  {
+    "id": "katana_stand",
+    "file": "katana_stand.png",
+    "category": "decor",
+    "source": "assets/props/universal/katana_stand.png",
+    "description": "katana stand prop",
+    "width": 24,
+    "height": 24
+  },
+  {
     "id": "kitchen_counter",
     "file": "kitchen_counter.png",
     "category": "furniture",
-    "source": "assets/textures/chest_of_drawers.png",
+    "source": "assets/props/living_room/chest_of_drawers.png",
     "description": "wooden service counter",
     "width": 46,
     "height": 22
   },
   {
+    "id": "lampe",
+    "file": "lampe.png",
+    "category": "decor",
+    "source": "assets/props/universal/lampe.png",
+    "description": "lampe prop",
+    "width": 16,
+    "height": 42
+  },
+  {
+    "id": "lavabo",
+    "file": "lavabo.png",
+    "category": "furniture",
+    "source": "assets/props/bathroom/lavabo.png",
+    "description": "lavabo prop",
+    "width": 25,
+    "height": 36
+  },
+  {
+    "id": "leather_sofa",
+    "file": "leather_sofa.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/leather_sofa.png",
+    "description": "leather sofa prop",
+    "width": 46,
+    "height": 23
+  },
+  {
+    "id": "lit_double_droite",
+    "file": "lit_double_droite.png",
+    "category": "furniture",
+    "source": "assets/props/bedroom/lit_double_droite.png",
+    "description": "lit double droite prop",
+    "width": 45,
+    "height": 54
+  },
+  {
+    "id": "lit_double_face",
+    "file": "lit_double_face.png",
+    "category": "furniture",
+    "source": "assets/props/bedroom/lit_double_face.png",
+    "description": "lit double face prop",
+    "width": 43,
+    "height": 47
+  },
+  {
+    "id": "lit_double_gauche",
+    "file": "lit_double_gauche.png",
+    "category": "furniture",
+    "source": "assets/props/bedroom/lit_double_gauche.png",
+    "description": "lit double gauche prop",
+    "width": 45,
+    "height": 54
+  },
+  {
+    "id": "lit_simple",
+    "file": "lit_simple.png",
+    "category": "furniture",
+    "source": "assets/props/bedroom/lit_simple.png",
+    "description": "lit simple prop",
+    "width": 22,
+    "height": 47
+  },
+  {
+    "id": "lit_simple_droite",
+    "file": "lit_simple_droite.png",
+    "category": "furniture",
+    "source": "assets/props/bedroom/lit_simple_droite.png",
+    "description": "lit simple droite prop",
+    "width": 44,
+    "height": 36
+  },
+  {
+    "id": "lit_simple_gauche",
+    "file": "lit_simple_gauche.png",
+    "category": "furniture",
+    "source": "assets/props/bedroom/lit_simple_gauche.png",
+    "description": "lit simple gauche prop",
+    "width": 44,
+    "height": 36
+  },
+  {
+    "id": "log",
+    "file": "log.png",
+    "category": "decor",
+    "source": "assets/props/universal/log.png",
+    "description": "log prop",
+    "width": 24,
+    "height": 24
+  },
+  {
     "id": "loot_chest",
     "file": "loot_chest.png",
     "category": "decor",
-    "source": "assets/textures/loot_chest2.png",
+    "source": "assets/props/universal/loot_chest2.png",
     "description": "loot chest",
+    "width": 31,
+    "height": 20
+  },
+  {
+    "id": "loot_chest2",
+    "file": "loot_chest2.png",
+    "category": "decor",
+    "source": "assets/props/universal/loot_chest2.png",
+    "description": "loot chest2 prop",
     "width": 31,
     "height": 20
   },
@@ -210,17 +1020,26 @@
     "id": "mana_pool",
     "file": "mana_pool.png",
     "category": "decor",
-    "source": "assets/textures/mana_pool.png",
+    "source": "assets/props/universal/mana_pool.png",
     "description": "mana pool",
     "width": 29,
     "height": 16
   },
   {
+    "id": "medieval_door",
+    "file": "medieval_door.png",
+    "category": "decor",
+    "source": "assets/props/universal/medieval_door.png",
+    "description": "medieval door prop",
+    "width": 23,
+    "height": 31
+  },
+  {
     "id": "meeting_table",
     "file": "meeting_table.png",
     "category": "furniture",
-    "source": "assets/textures/wooden_table2.png",
-    "description": "small wooden table",
+    "source": "assets/props/living_room/wooden_table2.png",
+    "description": "small meeting table",
     "width": 24,
     "height": 24
   },
@@ -228,25 +1047,106 @@
     "id": "microscope",
     "file": "microscope.png",
     "category": "decor",
-    "source": "assets/textures/microscope.png",
+    "source": "assets/props/universal/microscope.png",
     "description": "microscope",
     "width": 22,
     "height": 30
   },
   {
+    "id": "mirroir",
+    "file": "mirroir.png",
+    "category": "furniture",
+    "source": "assets/props/bathroom/mirroir.png",
+    "description": "mirroir prop",
+    "width": 27,
+    "height": 32
+  },
+  {
+    "id": "mystery_box",
+    "file": "mystery_box.png",
+    "category": "decor",
+    "source": "assets/props/universal/mystery_box.png",
+    "description": "mystery box prop",
+    "width": 42,
+    "height": 28
+  },
+  {
     "id": "office_chair",
     "file": "office_chair.png",
     "category": "furniture",
-    "source": "assets/textures/white_chair.png",
-    "description": "white office chair",
+    "source": "assets/props/living_room/white_chair.png",
+    "description": "office chair",
     "width": 18,
     "height": 22
+  },
+  {
+    "id": "oil_barrel",
+    "file": "oil_barrel.png",
+    "category": "decor",
+    "source": "assets/props/universal/oil_barrel.png",
+    "description": "oil barrel prop",
+    "width": 20,
+    "height": 30
+  },
+  {
+    "id": "old_fashioned_clock",
+    "file": "old_fashioned_clock.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/old_fashioned_clock.png",
+    "description": "old fashioned clock prop",
+    "width": 14,
+    "height": 32
+  },
+  {
+    "id": "old_fashioned_clock2",
+    "file": "old_fashioned_clock2.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/old_fashioned_clock2.png",
+    "description": "old fashioned clock2 prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "old_fashioned_tv",
+    "file": "old_fashioned_tv.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/old_fashioned_TV.png",
+    "description": "old fashioned tv prop",
+    "width": 32,
+    "height": 30
+  },
+  {
+    "id": "orange_flag",
+    "file": "orange_flag.png",
+    "category": "decor",
+    "source": "assets/props/universal/orange_flag.png",
+    "description": "orange flag prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "pills",
+    "file": "pills.png",
+    "category": "decor",
+    "source": "assets/props/universal/pills.png",
+    "description": "pills prop",
+    "width": 14,
+    "height": 29
+  },
+  {
+    "id": "pirate_flag",
+    "file": "pirate_flag.png",
+    "category": "decor",
+    "source": "assets/props/universal/pirate_flag.png",
+    "description": "pirate flag prop",
+    "width": 24,
+    "height": 24
   },
   {
     "id": "plant_arch",
     "file": "plant_arch.png",
     "category": "decor",
-    "source": "assets/textures/flower_pot.png",
+    "source": "assets/props/living_room/flower_pot.png",
     "description": "indoor plant",
     "width": 24,
     "height": 24
@@ -255,26 +1155,98 @@
     "id": "portable_camera",
     "file": "portable_camera.png",
     "category": "decor",
-    "source": "assets/textures/portable_video_camera.png",
+    "source": "assets/props/universal/portable_video_camera.png",
     "description": "portable video camera",
-    "width": 22,
-    "height": 18
+    "width": 34,
+    "height": 28
+  },
+  {
+    "id": "portable_video_camera",
+    "file": "portable_video_camera.png",
+    "category": "decor",
+    "source": "assets/props/universal/portable_video_camera.png",
+    "description": "portable video camera prop",
+    "width": 34,
+    "height": 28
   },
   {
     "id": "presentation_screen",
     "file": "presentation_screen.png",
     "category": "interactive",
-    "source": "assets/textures/old_fashioned_TV.png",
+    "source": "assets/props/living_room/old_fashioned_TV.png",
     "description": "presentation screen",
     "width": 32,
     "height": 30
   },
   {
+    "id": "purple_dog_basket",
+    "file": "purple_dog_basket.png",
+    "category": "decor",
+    "source": "assets/props/universal/purple_dog_basket.png",
+    "description": "purple dog basket prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "purple_flag",
+    "file": "purple_flag.png",
+    "category": "decor",
+    "source": "assets/props/universal/purple_flag.png",
+    "description": "purple flag prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "purple_sofa",
+    "file": "purple_sofa.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/purple_sofa.png",
+    "description": "purple sofa prop",
+    "width": 39,
+    "height": 19
+  },
+  {
+    "id": "radioactive_barrels",
+    "file": "radioactive_barrels.png",
+    "category": "decor",
+    "source": "assets/props/universal/radioactive_barrels.png",
+    "description": "radioactive barrels prop",
+    "width": 36,
+    "height": 27
+  },
+  {
+    "id": "ray_gun",
+    "file": "ray_gun.png",
+    "category": "decor",
+    "source": "assets/props/universal/ray_gun.png",
+    "description": "ray gun prop",
+    "width": 40,
+    "height": 25
+  },
+  {
+    "id": "red_flag",
+    "file": "red_flag.png",
+    "category": "decor",
+    "source": "assets/props/universal/red_flag.png",
+    "description": "red flag prop",
+    "width": 24,
+    "height": 24
+  },
+  {
     "id": "round_table",
     "file": "round_table.png",
     "category": "furniture",
-    "source": "assets/textures/wooden_table2.png",
+    "source": "assets/props/living_room/wooden_table2.png",
     "description": "small round table",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "royal_chair",
+    "file": "royal_chair.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/royal_chair.png",
+    "description": "royal chair prop",
     "width": 24,
     "height": 24
   },
@@ -282,7 +1254,7 @@
     "id": "rug_blue",
     "file": "rug_blue.png",
     "category": "decor",
-    "source": "assets/textures/tapis_bleu.png",
+    "source": "assets/props/living_room/tapis_bleu.png",
     "description": "blue rug",
     "width": 50,
     "height": 14
@@ -291,7 +1263,7 @@
     "id": "rug_green",
     "file": "rug_green.png",
     "category": "decor",
-    "source": "assets/textures/tapis_vert.png",
+    "source": "assets/props/living_room/tapis_vert.png",
     "description": "green rug",
     "width": 50,
     "height": 14
@@ -300,7 +1272,7 @@
     "id": "rug_red",
     "file": "rug_red.png",
     "category": "decor",
-    "source": "assets/textures/tapis_rouge.png",
+    "source": "assets/props/living_room/tapis_rouge.png",
     "description": "red rug",
     "width": 50,
     "height": 14
@@ -309,7 +1281,7 @@
     "id": "rug_white",
     "file": "rug_white.png",
     "category": "decor",
-    "source": "assets/textures/tapis_blanc.png",
+    "source": "assets/props/living_room/tapis_blanc.png",
     "description": "white rug",
     "width": 50,
     "height": 14
@@ -318,7 +1290,7 @@
     "id": "sci_fi_console",
     "file": "sci_fi_console.png",
     "category": "furniture",
-    "source": "assets/textures/sci-fi_console.png",
+    "source": "assets/props/desk/sci-fi_console.png",
     "description": "sci-fi console",
     "width": 40,
     "height": 32
@@ -327,7 +1299,7 @@
     "id": "sci_fi_desk",
     "file": "sci_fi_desk.png",
     "category": "furniture",
-    "source": "assets/textures/sci-fi_desk.png",
+    "source": "assets/props/desk/sci-fi_desk.png",
     "description": "sci-fi desk",
     "width": 38,
     "height": 23
@@ -336,53 +1308,269 @@
     "id": "server_rack",
     "file": "server_rack.png",
     "category": "furniture",
-    "source": "assets/textures/server_rack.png",
+    "source": "assets/props/desk/server_rack.png",
     "description": "server rack",
     "width": 22,
     "height": 28
   },
   {
+    "id": "shelf1",
+    "file": "shelf1.png",
+    "category": "decor",
+    "source": "assets/props/universal/shelf1.png",
+    "description": "shelf1 prop",
+    "width": 47,
+    "height": 10
+  },
+  {
+    "id": "shelf2",
+    "file": "shelf2.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/shelf2.png",
+    "description": "shelf2 prop",
+    "width": 25,
+    "height": 26
+  },
+  {
+    "id": "shelf3",
+    "file": "shelf3.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/shelf3.png",
+    "description": "shelf3 prop",
+    "width": 39,
+    "height": 15
+  },
+  {
+    "id": "shelf4",
+    "file": "shelf4.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/shelf4.png",
+    "description": "shelf4 prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "shelf5",
+    "file": "shelf5.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/shelf5.png",
+    "description": "shelf5 prop",
+    "width": 24,
+    "height": 24
+  },
+  {
     "id": "side_table",
     "file": "side_table.png",
     "category": "furniture",
-    "source": "assets/textures/DIY_table.png",
+    "source": "assets/props/living_room/DIY_table.png",
     "description": "small side table",
     "width": 24,
     "height": 24
   },
   {
+    "id": "skull_boxing_bag",
+    "file": "skull_boxing_bag.png",
+    "category": "decor",
+    "source": "assets/props/universal/skull_boxing_bag.png",
+    "description": "skull boxing bag prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "skull_chair",
+    "file": "skull_chair.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/skull_chair.png",
+    "description": "skull chair prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "skull_tower",
+    "file": "skull_tower.png",
+    "category": "decor",
+    "source": "assets/props/universal/skull_tower.png",
+    "description": "skull tower prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "smartphone",
+    "file": "smartphone.png",
+    "category": "decor",
+    "source": "assets/props/universal/smartphone.png",
+    "description": "smartphone prop",
+    "width": 26,
+    "height": 43
+  },
+  {
+    "id": "squeleton",
+    "file": "squeleton.png",
+    "category": "decor",
+    "source": "assets/props/universal/squeleton.png",
+    "description": "squeleton prop",
+    "width": 35,
+    "height": 14
+  },
+  {
     "id": "stool_small",
     "file": "stool_small.png",
     "category": "furniture",
-    "source": "assets/textures/dracula_chair.png",
+    "source": "assets/props/living_room/dracula_chair.png",
     "description": "small dark stool",
     "width": 24,
     "height": 24
   },
   {
+    "id": "syringe",
+    "file": "syringe.png",
+    "category": "decor",
+    "source": "assets/props/universal/syringe.png",
+    "description": "syringe prop",
+    "width": 27,
+    "height": 27
+  },
+  {
+    "id": "tapis_blanc",
+    "file": "tapis_blanc.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/tapis_blanc.png",
+    "description": "tapis blanc prop",
+    "width": 50,
+    "height": 14
+  },
+  {
+    "id": "tapis_bleu",
+    "file": "tapis_bleu.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/tapis_bleu.png",
+    "description": "tapis bleu prop",
+    "width": 50,
+    "height": 14
+  },
+  {
+    "id": "tapis_rouge",
+    "file": "tapis_rouge.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/tapis_rouge.png",
+    "description": "tapis rouge prop",
+    "width": 50,
+    "height": 14
+  },
+  {
+    "id": "tapis_vert",
+    "file": "tapis_vert.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/tapis_vert.png",
+    "description": "tapis vert prop",
+    "width": 50,
+    "height": 14
+  },
+  {
+    "id": "training_dummy",
+    "file": "training_dummy.png",
+    "category": "decor",
+    "source": "assets/props/universal/training_dummy.png",
+    "description": "training dummy prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "tv",
+    "file": "tv.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/TV.png",
+    "description": "tv prop",
+    "width": 37,
+    "height": 28
+  },
+  {
     "id": "tv_console",
     "file": "tv_console.png",
     "category": "furniture",
-    "source": "assets/textures/TV.png",
+    "source": "assets/props/living_room/TV.png",
     "description": "television",
     "width": 37,
     "height": 28
   },
   {
+    "id": "uzi_gun",
+    "file": "uzi_gun.png",
+    "category": "decor",
+    "source": "assets/props/universal/uzi_gun.png",
+    "description": "uzi gun prop",
+    "width": 45,
+    "height": 24
+  },
+  {
     "id": "vital_monitor",
     "file": "vital_monitor.png",
     "category": "decor",
-    "source": "assets/textures/vital_signs_monitor.png",
+    "source": "assets/props/universal/vital_signs_monitor.png",
     "description": "vital signs monitor",
-    "width": 22,
-    "height": 17
+    "width": 30,
+    "height": 23
+  },
+  {
+    "id": "vital_signs_monitor",
+    "file": "vital_signs_monitor.png",
+    "category": "decor",
+    "source": "assets/props/universal/vital_signs_monitor.png",
+    "description": "vital signs monitor prop",
+    "width": 30,
+    "height": 23
+  },
+  {
+    "id": "wall_acacia_planks",
+    "file": "wall_acacia_planks.png",
+    "category": "wall",
+    "source": "assets/building/acacia_planks.png",
+    "description": "acacia planks wall tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "wall_bamboo_planks",
+    "file": "wall_bamboo_planks.png",
+    "category": "wall",
+    "source": "assets/building/bamboo_planks.png",
+    "description": "bamboo planks wall tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "wall_birch_planks",
+    "file": "wall_birch_planks.png",
+    "category": "wall",
+    "source": "assets/building/birch_planks.png",
+    "description": "birch planks wall tile",
+    "width": 16,
+    "height": 16
   },
   {
     "id": "wall_brick",
     "file": "wall_brick.png",
     "category": "wall",
-    "source": "generated temporary pixel art",
-    "description": "red brick wall tile; temporary until PACK wall textures are sliced",
+    "source": "assets/building/bricks.png",
+    "description": "stable alias for brick wall",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "wall_bricks",
+    "file": "wall_bricks.png",
+    "category": "wall",
+    "source": "assets/building/bricks.png",
+    "description": "bricks wall tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "wall_cherry_planks",
+    "file": "wall_cherry_planks.png",
+    "category": "wall",
+    "source": "assets/building/cherry_planks.png",
+    "description": "cherry planks wall tile",
     "width": 16,
     "height": 16
   },
@@ -390,17 +1578,170 @@
     "id": "wall_clock",
     "file": "wall_clock.png",
     "category": "decor",
-    "source": "assets/textures/wall_clock.png",
+    "source": "assets/props/living_room/wall_clock.png",
     "description": "wall clock",
     "width": 23,
     "height": 22
   },
   {
+    "id": "wall_cobblestone",
+    "file": "wall_cobblestone.png",
+    "category": "wall",
+    "source": "assets/building/cobblestone.png",
+    "description": "cobblestone wall tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "wall_dark_oak_planks",
+    "file": "wall_dark_oak_planks.png",
+    "category": "wall",
+    "source": "assets/building/dark_oak_planks.png",
+    "description": "dark oak planks wall tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "wall_deepslate_bricks",
+    "file": "wall_deepslate_bricks.png",
+    "category": "wall",
+    "source": "assets/building/deepslate_bricks.png",
+    "description": "deepslate bricks wall tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "wall_deepslate_tiles",
+    "file": "wall_deepslate_tiles.png",
+    "category": "wall",
+    "source": "assets/building/deepslate_tiles.png",
+    "description": "deepslate tiles wall tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "wall_glass",
+    "file": "wall_glass.png",
+    "category": "wall",
+    "source": "assets/building/glass.png",
+    "description": "glass wall tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "wall_green_stained_glass",
+    "file": "wall_green_stained_glass.png",
+    "category": "wall",
+    "source": "assets/building/green_stained_glass.png",
+    "description": "green stained glass wall tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "wall_jungle_planks",
+    "file": "wall_jungle_planks.png",
+    "category": "wall",
+    "source": "assets/building/jungle_planks.png",
+    "description": "jungle planks wall tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "wall_light_blue_stained_glass",
+    "file": "wall_light_blue_stained_glass.png",
+    "category": "wall",
+    "source": "assets/building/light_blue_stained_glass.png",
+    "description": "light blue stained glass wall tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "wall_light_gray_stained_glass",
+    "file": "wall_light_gray_stained_glass.png",
+    "category": "wall",
+    "source": "assets/building/light_gray_stained_glass.png",
+    "description": "light gray stained glass wall tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "wall_magenta_stained_glass",
+    "file": "wall_magenta_stained_glass.png",
+    "category": "wall",
+    "source": "assets/building/magenta_stained_glass.png",
+    "description": "magenta stained glass wall tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "wall_oak_planks",
+    "file": "wall_oak_planks.png",
+    "category": "wall",
+    "source": "assets/building/oak_planks.png",
+    "description": "oak planks wall tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "wall_pink_stained_glass",
+    "file": "wall_pink_stained_glass.png",
+    "category": "wall",
+    "source": "assets/building/pink_stained_glass.png",
+    "description": "pink stained glass wall tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "wall_red_stained_glass",
+    "file": "wall_red_stained_glass.png",
+    "category": "wall",
+    "source": "assets/building/red_stained_glass.png",
+    "description": "red stained glass wall tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "wall_sol_carreaux_bleu",
+    "file": "wall_sol_carreaux_bleu.png",
+    "category": "wall",
+    "source": "assets/building/sol_carreaux_bleu.png",
+    "description": "sol carreaux bleu wall tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "wall_sol_checkerboard",
+    "file": "wall_sol_checkerboard.png",
+    "category": "wall",
+    "source": "assets/building/sol_checkerboard.png",
+    "description": "sol checkerboard wall tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "wall_spruce_planks",
+    "file": "wall_spruce_planks.png",
+    "category": "wall",
+    "source": "assets/building/spruce_planks.png",
+    "description": "spruce planks wall tile",
+    "width": 16,
+    "height": 16
+  },
+  {
     "id": "wall_stone",
     "file": "wall_stone.png",
     "category": "wall",
-    "source": "generated temporary pixel art",
-    "description": "gray stone wall tile; temporary until PACK wall textures are sliced",
+    "source": "assets/building/stone_bricks.png",
+    "description": "stable alias for stone wall",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "wall_stone_bricks",
+    "file": "wall_stone_bricks.png",
+    "category": "wall",
+    "source": "assets/building/stone_bricks.png",
+    "description": "stone bricks wall tile",
     "width": 16,
     "height": 16
   },
@@ -408,8 +1749,26 @@
     "id": "wall_tan",
     "file": "wall_tan.png",
     "category": "wall",
-    "source": "generated temporary pixel art",
-    "description": "tan brick wall tile; temporary until PACK wall textures are sliced",
+    "source": "assets/building/acacia_planks.png",
+    "description": "stable alias for tan wall",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "wall_white_stained_glass",
+    "file": "wall_white_stained_glass.png",
+    "category": "wall",
+    "source": "assets/building/white_stained_glass.png",
+    "description": "white stained glass wall tile",
+    "width": 16,
+    "height": 16
+  },
+  {
+    "id": "wall_yellow_stained_glass",
+    "file": "wall_yellow_stained_glass.png",
+    "category": "wall",
+    "source": "assets/building/yellow_stained_glass.png",
+    "description": "yellow stained glass wall tile",
     "width": 16,
     "height": 16
   },
@@ -417,7 +1776,7 @@
     "id": "wardrobe_brown",
     "file": "wardrobe_brown.png",
     "category": "furniture",
-    "source": "assets/textures/commode.png",
+    "source": "assets/props/living_room/commode.png",
     "description": "round wooden cabinet",
     "width": 35,
     "height": 39
@@ -426,25 +1785,79 @@
     "id": "water_feature",
     "file": "water_feature.png",
     "category": "decor",
-    "source": "assets/textures/mana_pool.png",
+    "source": "assets/props/universal/mana_pool.png",
     "description": "small water feature",
     "width": 29,
     "height": 16
   },
   {
+    "id": "wc",
+    "file": "wc.png",
+    "category": "furniture",
+    "source": "assets/props/bathroom/WC.png",
+    "description": "wc prop",
+    "width": 15,
+    "height": 30
+  },
+  {
+    "id": "white_blank_flag",
+    "file": "white_blank_flag.png",
+    "category": "decor",
+    "source": "assets/props/universal/white_blank_flag.png",
+    "description": "white blank flag prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "white_chair",
+    "file": "white_chair.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/white_chair.png",
+    "description": "white chair prop",
+    "width": 18,
+    "height": 22
+  },
+  {
     "id": "window_blue",
     "file": "window_blue.png",
     "category": "decor",
-    "source": "assets/textures/fenêtre.png",
+    "source": "assets/props/universal/fenêtre.png",
     "description": "blue window",
     "width": 27,
     "height": 28
   },
   {
+    "id": "wooden_table",
+    "file": "wooden_table.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/wooden_table.png",
+    "description": "wooden table prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "wooden_table2",
+    "file": "wooden_table2.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/wooden_table2.png",
+    "description": "wooden table2 prop",
+    "width": 24,
+    "height": 24
+  },
+  {
+    "id": "working_table",
+    "file": "working_table.png",
+    "category": "furniture",
+    "source": "assets/props/living_room/working_table.png",
+    "description": "working table prop",
+    "width": 24,
+    "height": 24
+  },
+  {
     "id": "writing_desk",
     "file": "writing_desk.png",
     "category": "furniture",
-    "source": "assets/textures/working_table.png",
+    "source": "assets/props/living_room/working_table.png",
     "description": "working table",
     "width": 24,
     "height": 24

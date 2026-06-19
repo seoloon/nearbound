@@ -1,15 +1,19 @@
 from __future__ import annotations
 
 import json
+import re
+import unicodedata
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+from PIL import Image
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / "assets" / "textures"
+SOURCE = ROOT / "assets"
 OUT = ROOT / "public" / "assets" / "office"
+ASSETS_TS = ROOT / "src" / "game" / "assets.ts"
+MAX_AUTO_DIMENSION = 128
 
 
 @dataclass(frozen=True)
@@ -20,7 +24,6 @@ class TextureSpec:
     description: str
     crop: tuple[int, int, int, int] | None = None
     scale: float | None = None
-    soften_dark_pixels: bool = False
 
 
 @dataclass(frozen=True)
@@ -34,113 +37,149 @@ class AssetInfo:
     height: int
 
 
-TEXTURES: tuple[TextureSpec, ...] = (
-    TextureSpec(
-        "floor_wood",
-        "sol_chene_bois.png",
-        "floor",
-        "warm wood 16x16 floor tile cropped from source",
-        crop=(0, 0, 16, 16),
-        soften_dark_pixels=True,
-    ),
-    TextureSpec(
-        "floor_blue",
-        "sol_carreaux_bleu.png",
-        "floor",
-        "blue office 16x16 floor tile cropped from source",
-        crop=(0, 0, 16, 16),
-    ),
-    TextureSpec(
-        "floor_checker",
-        "sol_checkerboard.png",
-        "floor",
-        "checker 16x16 floor tile cropped from source",
-        crop=(0, 0, 16, 16),
-    ),
-    TextureSpec("desk_simple", "bureau.png", "furniture", "wooden office desk"),
-    TextureSpec("chair_wood", "white_chair.png", "furniture", "white office chair"),
-    TextureSpec("bookcase_small", "bookshelf4.png", "furniture", "small shelf"),
-    TextureSpec("armchair_green", "royal_chair.png", "furniture", "green armchair"),
-    TextureSpec("fireplace", "furnace_close.png", "furniture", "closed fireplace"),
-    TextureSpec("writing_desk", "working_table.png", "furniture", "working table"),
-    TextureSpec("meeting_table", "wooden_table2.png", "furniture", "small wooden table"),
-    TextureSpec("stool_small", "dracula_chair.png", "furniture", "small dark stool"),
-    TextureSpec("office_chair", "white_chair.png", "furniture", "white office chair"),
-    TextureSpec("wardrobe_brown", "commode.png", "furniture", "round wooden cabinet"),
-    TextureSpec("dresser_brown", "chest_of_drawers.png", "furniture", "wooden drawers"),
-    TextureSpec("conference_table", "bureau.png", "furniture", "large meeting desk"),
-    TextureSpec("bookcase_brown", "bibliotheque.png", "furniture", "large bookcase"),
-    TextureSpec("coffee_table", "wooden_table.png", "furniture", "wooden coffee table"),
-    TextureSpec("side_table", "DIY_table.png", "furniture", "small side table"),
-    TextureSpec("chair_red", "fauteuil_rouge.png", "furniture", "red lounge chair"),
-    TextureSpec("chair_blue", "blue_medieval_chair.png", "furniture", "blue lounge chair"),
-    TextureSpec("bookshelf_lounge", "bookshelf6.png", "furniture", "filled lounge shelf"),
-    TextureSpec("tv_console", "TV.png", "furniture", "television"),
-    TextureSpec("couch_red_small", "leather_sofa.png", "furniture", "red leather sofa"),
-    TextureSpec("round_table", "wooden_table2.png", "furniture", "small round table"),
-    TextureSpec("window_blue", "fen*.png", "decor", "blue window"),
-    TextureSpec("fridge", "server_rack.png", "furniture", "server rack used as utility cabinet"),
-    TextureSpec("kitchen_counter", "chest_of_drawers.png", "furniture", "wooden service counter"),
-    TextureSpec("presentation_screen", "old_fashioned_TV.png", "interactive", "presentation screen"),
-    TextureSpec("wall_clock", "wall_clock.png", "decor", "wall clock"),
-    TextureSpec("cozy_sofa", "aquarium_sofa.png", "furniture", "aquarium sofa"),
-    TextureSpec("plant_arch", "flower_pot.png", "decor", "indoor plant"),
-    TextureSpec("cabinet_big", "commode_face.png", "furniture", "front-facing cabinet"),
-    TextureSpec("coffee_machine", "cooking_robot.png", "interactive", "coffee machine"),
-    TextureSpec("water_feature", "mana_pool.png", "decor", "small water feature"),
-    TextureSpec("rug_red", "tapis_rouge.png", "decor", "red rug"),
-    TextureSpec("rug_blue", "tapis_bleu.png", "decor", "blue rug"),
-    TextureSpec("rug_green", "tapis_vert.png", "decor", "green rug"),
-    TextureSpec("rug_white", "tapis_blanc.png", "decor", "white rug"),
-    TextureSpec("server_rack", "server_rack.png", "furniture", "server rack"),
-    TextureSpec("sci_fi_console", "sci-fi_console.png", "furniture", "sci-fi console"),
-    TextureSpec("sci_fi_desk", "sci-fi_desk.png", "furniture", "sci-fi desk"),
-    TextureSpec("microscope", "microscope.png", "decor", "microscope"),
-    TextureSpec("portable_camera", "portable_video_camera.png", "decor", "portable video camera", scale=0.65),
-    TextureSpec("vital_monitor", "vital_signs_monitor.png", "decor", "vital signs monitor", scale=0.72),
-    TextureSpec("loot_chest", "loot_chest2.png", "decor", "loot chest"),
-    TextureSpec("chemistry_flasks", "chemistry_flasks.png", "decor", "chemistry flasks"),
-    TextureSpec("mana_pool", "mana_pool.png", "decor", "mana pool"),
+CORE_ALIASES: tuple[TextureSpec, ...] = (
+    TextureSpec("floor_wood", "building/oak_planks.png", "floor", "stable alias for oak plank floor", crop=(0, 0, 16, 16)),
+    TextureSpec("floor_blue", "building/sol_carreaux_bleu.png", "floor", "stable alias for blue tile floor", crop=(0, 0, 16, 16)),
+    TextureSpec("floor_checker", "building/sol_checkerboard.png", "floor", "stable alias for checkerboard floor", crop=(0, 0, 16, 16)),
+    TextureSpec("wall_brick", "building/bricks.png", "wall", "stable alias for brick wall", crop=(0, 0, 16, 16)),
+    TextureSpec("wall_tan", "building/acacia_planks.png", "wall", "stable alias for tan wall", crop=(0, 0, 16, 16)),
+    TextureSpec("wall_stone", "building/stone_bricks.png", "wall", "stable alias for stone wall", crop=(0, 0, 16, 16)),
+    TextureSpec("desk_simple", "props/desk/bureau.png", "furniture", "office desk"),
+    TextureSpec("chair_wood", "props/living_room/white_chair.png", "furniture", "white chair"),
+    TextureSpec("bookcase_small", "props/living_room/bookshelf4.png", "furniture", "small bookcase"),
+    TextureSpec("armchair_green", "props/living_room/royal_chair.png", "furniture", "royal armchair"),
+    TextureSpec("fireplace", "props/living_room/furnace_close.png", "furniture", "closed fireplace"),
+    TextureSpec("writing_desk", "props/living_room/working_table.png", "furniture", "working table"),
+    TextureSpec("meeting_table", "props/living_room/wooden_table2.png", "furniture", "small meeting table"),
+    TextureSpec("stool_small", "props/living_room/dracula_chair.png", "furniture", "small dark stool"),
+    TextureSpec("office_chair", "props/living_room/white_chair.png", "furniture", "office chair"),
+    TextureSpec("wardrobe_brown", "props/living_room/commode.png", "furniture", "round wooden cabinet"),
+    TextureSpec("dresser_brown", "props/living_room/chest_of_drawers.png", "furniture", "wooden drawers"),
+    TextureSpec("conference_table", "props/desk/bureau.png", "furniture", "large meeting desk"),
+    TextureSpec("bookcase_brown", "props/living_room/bibliotheque.png", "furniture", "large bookcase"),
+    TextureSpec("coffee_table", "props/living_room/wooden_table.png", "furniture", "wooden coffee table"),
+    TextureSpec("side_table", "props/living_room/DIY_table.png", "furniture", "small side table"),
+    TextureSpec("chair_red", "props/living_room/fauteuil_rouge.png", "furniture", "red lounge chair"),
+    TextureSpec("chair_blue", "props/living_room/blue_medieval_chair.png", "furniture", "blue lounge chair"),
+    TextureSpec("bookshelf_lounge", "props/universal/bookshelf6.png", "furniture", "filled lounge shelf"),
+    TextureSpec("tv_console", "props/living_room/TV.png", "furniture", "television"),
+    TextureSpec("couch_red_small", "props/living_room/leather_sofa.png", "furniture", "red leather sofa"),
+    TextureSpec("round_table", "props/living_room/wooden_table2.png", "furniture", "small round table"),
+    TextureSpec("window_blue", "props/universal/fenêtre.png", "decor", "blue window"),
+    TextureSpec("fridge", "props/desk/server_rack.png", "furniture", "server rack used as utility cabinet"),
+    TextureSpec("kitchen_counter", "props/living_room/chest_of_drawers.png", "furniture", "wooden service counter"),
+    TextureSpec("presentation_screen", "props/living_room/old_fashioned_TV.png", "interactive", "presentation screen"),
+    TextureSpec("wall_clock", "props/living_room/wall_clock.png", "decor", "wall clock"),
+    TextureSpec("cozy_sofa", "props/living_room/aquarium_sofa.png", "furniture", "aquarium sofa"),
+    TextureSpec("plant_arch", "props/living_room/flower_pot.png", "decor", "indoor plant"),
+    TextureSpec("cabinet_big", "props/living_room/commode_face.png", "furniture", "front-facing cabinet"),
+    TextureSpec("coffee_machine", "props/kitchen/cooking_robot.png", "interactive", "coffee machine"),
+    TextureSpec("water_feature", "props/universal/mana_pool.png", "decor", "small water feature"),
+    TextureSpec("rug_red", "props/living_room/tapis_rouge.png", "decor", "red rug"),
+    TextureSpec("rug_blue", "props/living_room/tapis_bleu.png", "decor", "blue rug"),
+    TextureSpec("rug_green", "props/living_room/tapis_vert.png", "decor", "green rug"),
+    TextureSpec("rug_white", "props/living_room/tapis_blanc.png", "decor", "white rug"),
+    TextureSpec("server_rack", "props/desk/server_rack.png", "furniture", "server rack"),
+    TextureSpec("sci_fi_console", "props/desk/sci-fi_console.png", "furniture", "sci-fi console"),
+    TextureSpec("sci_fi_desk", "props/desk/sci-fi_desk.png", "furniture", "sci-fi desk"),
+    TextureSpec("microscope", "props/universal/microscope.png", "decor", "microscope"),
+    TextureSpec("portable_camera", "props/universal/portable_video_camera.png", "decor", "portable video camera"),
+    TextureSpec("vital_monitor", "props/universal/vital_signs_monitor.png", "decor", "vital signs monitor"),
+    TextureSpec("loot_chest", "props/universal/loot_chest2.png", "decor", "loot chest"),
+    TextureSpec("chemistry_flasks", "props/universal/chemistry_flasks.png", "decor", "chemistry flasks"),
+    TextureSpec("mana_pool", "props/universal/mana_pool.png", "decor", "mana pool"),
 )
 
 
-TEMP_WALLS = (
-    ("wall_brick", "#9f4f3d", "#d3a085", "#71352d", "red brick wall tile"),
-    ("wall_tan", "#c1914b", "#e2c783", "#8b6331", "tan brick wall tile"),
-    ("wall_stone", "#87909a", "#c5ccd0", "#5b646d", "gray stone wall tile"),
-)
+def main() -> None:
+    OUT.mkdir(parents=True, exist_ok=True)
+    clear_generated_outputs()
+
+    specs = list(CORE_ALIASES)
+    specs.extend(building_specs())
+    specs.extend(prop_specs(specs))
+
+    assets: dict[str, AssetInfo] = {}
+    for spec in specs:
+        if spec.id in assets:
+            continue
+        assets[spec.id] = write_texture(spec)
+
+    ordered_assets = sorted(assets.values(), key=lambda item: item.id)
+    write_manifest(ordered_assets)
+    write_assets_ts(ordered_assets)
+    print(f"Generated {len(ordered_assets)} office assets in {OUT}")
 
 
-def source_path(file_name: str) -> Path:
-    if file_name.startswith("PACK"):
-        raise ValueError(f"PACK spritesheets are intentionally excluded: {file_name}")
-    if "*" in file_name:
-        matches = sorted(path for path in SOURCE.glob(file_name) if not path.name.startswith("PACK"))
-        if len(matches) == 1:
-            return matches[0]
-        raise FileNotFoundError(f"Expected one texture source for pattern {file_name!r}, found {len(matches)}")
-    path = SOURCE / file_name
-    if path.exists():
-        return path
-    raise FileNotFoundError(f"Missing texture source: {path}")
+def clear_generated_outputs() -> None:
+    for path in OUT.glob("*.png"):
+        if path.name.startswith("_"):
+            continue
+        path.unlink()
+
+
+def building_specs() -> list[TextureSpec]:
+    specs: list[TextureSpec] = []
+    for path in sorted((SOURCE / "building").glob("*.png")):
+        if should_skip_source(path):
+            continue
+        material = sanitize_id(path.stem)
+        for prefix, category in (("floor", "floor"), ("wall", "wall")):
+            specs.append(
+                TextureSpec(
+                    f"{prefix}_{material}",
+                    rel_source(path),
+                    category,
+                    f"{material.replace('_', ' ')} {category} tile",
+                    crop=(0, 0, 16, 16),
+                )
+            )
+    return specs
+
+
+def prop_specs(existing_specs: list[TextureSpec]) -> list[TextureSpec]:
+    used_ids = {spec.id for spec in existing_specs}
+    props = [path for path in sorted((SOURCE / "props").rglob("*.png")) if not should_skip_source(path)]
+    base_counts: dict[str, int] = {}
+    for path in props:
+        base_counts[sanitize_id(path.stem)] = base_counts.get(sanitize_id(path.stem), 0) + 1
+
+    specs: list[TextureSpec] = []
+    for path in props:
+        base_id = sanitize_id(path.stem)
+        parent_id = sanitize_id(path.parent.name)
+        asset_id = base_id if base_counts[base_id] == 1 else f"{parent_id}_{base_id}"
+        if asset_id in used_ids:
+            continue
+        specs.append(
+            TextureSpec(
+                asset_id,
+                rel_source(path),
+                category_for_prop(path),
+                f"{asset_id.replace('_', ' ')} prop",
+            )
+        )
+        used_ids.add(asset_id)
+    return specs
+
+
+def should_skip_source(path: Path) -> bool:
+    if path.name.startswith("PACK"):
+        return True
+    if "demo" in path.stem.lower():
+        return True
+    with Image.open(path) as image:
+        return image.width > MAX_AUTO_DIMENSION or image.height > MAX_AUTO_DIMENSION
 
 
 def write_texture(spec: TextureSpec) -> AssetInfo:
-    src = source_path(spec.source)
+    src = SOURCE / spec.source
     image = Image.open(src).convert("RGBA")
     if spec.crop:
         image = image.crop(spec.crop)
     if spec.scale:
-        width = max(1, round(image.width * spec.scale))
-        height = max(1, round(image.height * spec.scale))
-        image = image.resize((width, height), Image.Resampling.NEAREST)
-    if spec.soften_dark_pixels:
-        pixels = image.load()
-        for y in range(image.height):
-            for x in range(image.width):
-                red, green, blue, alpha = pixels[x, y]
-                if alpha and red < 45 and green < 35 and blue < 30:
-                    pixels[x, y] = (92, 52, 28, alpha)
+        size = (max(1, round(image.width * spec.scale)), max(1, round(image.height * spec.scale)))
+        image = image.resize(size, Image.Resampling.NEAREST)
 
     file_name = f"{spec.id}.png"
     image.save(OUT / file_name)
@@ -148,47 +187,89 @@ def write_texture(spec: TextureSpec) -> AssetInfo:
         id=spec.id,
         file=file_name,
         category=spec.category,
-        source=f"assets/textures/{src.name}",
+        source=f"assets/{spec.source}",
         description=spec.description,
         width=image.width,
         height=image.height,
     )
 
 
-def write_wall(asset_id: str, base: str, mortar: str, shade: str, description: str) -> AssetInfo:
-    image = Image.new("RGBA", (16, 16), base)
-    draw = ImageDraw.Draw(image)
-    for y in (4, 9, 14):
-        draw.line((0, y, 15, y), fill=mortar)
-    for y, offset in ((0, 0), (5, 5), (10, 0)):
-        for x in range(offset, 16, 8):
-            draw.line((x, y, x, min(15, y + 4)), fill=mortar)
-    draw.line((0, 15, 15, 15), fill=shade)
-
-    file_name = f"{asset_id}.png"
-    image.save(OUT / file_name)
-    return AssetInfo(
-        id=asset_id,
-        file=file_name,
-        category="wall",
-        source="generated temporary pixel art",
-        description=f"{description}; temporary until PACK wall textures are sliced",
-        width=16,
-        height=16,
-    )
-
-
-def main() -> None:
-    OUT.mkdir(parents=True, exist_ok=True)
-    assets = [write_texture(spec) for spec in TEXTURES]
-    assets.extend(write_wall(*wall) for wall in TEMP_WALLS)
-    assets.sort(key=lambda item: item.id)
-
+def write_manifest(assets: list[AssetInfo]) -> None:
     with (OUT / "manifest.json").open("w", encoding="utf-8") as fp:
         json.dump([asdict(item) for item in assets], fp, ensure_ascii=False, indent=2)
         fp.write("\n")
 
-    print(f"Generated {len(assets)} office assets in {OUT}")
+
+def write_assets_ts(assets: list[AssetInfo]) -> None:
+    asset_lines = [f'  {json.dumps(asset.id)}: {json.dumps(asset.file)},' for asset in assets]
+    build_ids = [asset.id for asset in assets if asset.category in {"floor", "wall"}]
+    floor_layer_ids = [
+        asset.id
+        for asset in assets
+        if asset.id.startswith("rug_")
+        or asset.id.startswith("tapis_")
+        or asset.id in {"mana_pool", "water_feature"}
+    ]
+
+    text = "\n".join(
+        [
+            'export const ASSET_BASE = "/assets/office";',
+            "",
+            "export const OFFICE_ASSETS = {",
+            *asset_lines,
+            "} as const;",
+            "",
+            "export type AssetId = keyof typeof OFFICE_ASSETS;",
+            "export type ImageMap = Record<AssetId, HTMLImageElement>;",
+            "",
+            "export const BUILD_ASSET_IDS = [",
+            *[f"  {json.dumps(asset_id)}," for asset_id in build_ids],
+            "] satisfies AssetId[];",
+            "",
+            "export const FLOOR_LAYER_ASSET_IDS = [",
+            *[f"  {json.dumps(asset_id)}," for asset_id in floor_layer_ids],
+            "] satisfies AssetId[];",
+            "",
+            "export async function loadOfficeImages(): Promise<ImageMap> {",
+            "  const entries = Object.entries(OFFICE_ASSETS) as [AssetId, string][];",
+            "  const loaded = await Promise.all(",
+            "    entries.map(([id, file]) => {",
+            "      return new Promise<[AssetId, HTMLImageElement]>((resolve, reject) => {",
+            "        const image = new Image();",
+            "        image.onload = () => resolve([id, image]);",
+            "        image.onerror = () => reject(new Error(`Unable to load ${file}`));",
+            "        image.src = `${ASSET_BASE}/${file}`;",
+            "      });",
+            "    })",
+            "  );",
+            "",
+            "  return Object.fromEntries(loaded) as ImageMap;",
+            "}",
+            "",
+        ]
+    )
+    ASSETS_TS.write_text(text, encoding="utf-8")
+
+
+def category_for_prop(path: Path) -> str:
+    parts = {part.lower() for part in path.parts}
+    if "desk" in parts or "bedroom" in parts or "living_room" in parts or "kitchen" in parts or "bathroom" in parts:
+        return "furniture"
+    return "decor"
+
+
+def rel_source(path: Path) -> str:
+    return path.relative_to(SOURCE).as_posix()
+
+
+def sanitize_id(value: str) -> str:
+    normalized = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
+    normalized = normalized.lower().replace("&", "and")
+    normalized = re.sub(r"[^a-z0-9]+", "_", normalized)
+    normalized = re.sub(r"_+", "_", normalized).strip("_")
+    if not normalized:
+        raise ValueError(f"Unable to create asset id from {value!r}")
+    return normalized
 
 
 if __name__ == "__main__":

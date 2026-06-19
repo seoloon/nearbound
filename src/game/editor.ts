@@ -1,4 +1,4 @@
-import type { AssetId } from "./assets";
+import { BUILD_ASSET_IDS, FLOOR_LAYER_ASSET_IDS, type AssetId } from "./assets";
 import type { Zone } from "./map";
 
 export type MapEditorTab = "zone" | "build" | "props";
@@ -17,16 +17,10 @@ export interface MapEditorTool {
   pendingBroadcastName?: string;
 }
 
-export const BUILD_ASSETS = [
-  "floor_wood",
-  "floor_blue",
-  "floor_checker",
-  "wall_brick",
-  "wall_tan",
-  "wall_stone"
-] satisfies AssetId[];
+export const BUILD_ASSETS = BUILD_ASSET_IDS;
 
 export const BUILD_ASSET_SET: ReadonlySet<AssetId> = new Set(BUILD_ASSETS);
+export const FLOOR_LAYER_ASSET_SET: ReadonlySet<AssetId> = new Set(FLOOR_LAYER_ASSET_IDS);
 
 export const DEFAULT_MAP_EDITOR_TOOL: MapEditorTool = {
   activeTab: "props",
@@ -58,13 +52,13 @@ export function isBuildAsset(asset: AssetId) {
 }
 
 export function isFloorAsset(asset: AssetId) {
-  return asset.startsWith("floor_");
+  return BUILD_ASSET_SET.has(asset) && asset.startsWith("floor_");
 }
 
 export function isWallAsset(asset: AssetId) {
-  return asset.startsWith("wall_");
+  return BUILD_ASSET_SET.has(asset) && asset.startsWith("wall_");
 }
 
 export function isFloorLayerProp(asset: AssetId) {
-  return asset.startsWith("rug_") || asset === "mana_pool" || asset === "water_feature";
+  return FLOOR_LAYER_ASSET_SET.has(asset);
 }
