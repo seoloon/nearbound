@@ -95,14 +95,14 @@ function drawZones(ctx: CanvasRenderingContext2D, map: OfficeMap) {
     const type = getZoneType(zone);
     if (type === "hitbox") continue;
     ctx.save();
-    ctx.globalAlpha = isBroadcastZone(zone) ? 0.22 : type === "office" || type === "meeting" ? 0.16 : 0.12;
+    ctx.globalAlpha = isBroadcastZone(zone) ? 0.34 : type === "office" || type === "meeting" ? 0.24 : 0.22;
     ctx.fillStyle = isBroadcastZone(zone)
-      ? "#9b4ab6"
+      ? "#ff4fd8"
       : type === "meeting"
-        ? "#4356a6"
+        ? "#4d7cff"
         : type === "living"
-          ? "#2f9667"
-          : "#9f762c";
+          ? "#00e676"
+          : "#ffd43b";
     ctx.fillRect(zone.x, zone.y, zone.w, zone.h);
     ctx.restore();
   }

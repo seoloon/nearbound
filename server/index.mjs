@@ -12,6 +12,7 @@ const port = Number(process.env.PORT || 3000);
 const dataDir = path.resolve(root, process.env.NEARBOUND_DATA_DIR || ".nearbound-data");
 const roomDir = path.join(dataDir, "rooms");
 const PRESENCE_TTL_MS = 15000;
+const DISCONNECT_GRACE_MS = 1200;
 const ROOM_IDLE_TTL_MS = 30 * 60 * 1000;
 const SAVE_DEBOUNCE_MS = 650;
 const MAX_CHAT_MESSAGES = 100;
@@ -114,6 +115,7 @@ app.get("/api/sync/:room/events", async (req, res) => {
   const identity = sanitizeIdentity(req.query.identity);
   const state = await getRoomState(roomName);
   touchRoom(state);
+  clearDisconnectTimer(state, identity);
 
   res.writeHead(200, {
     "Content-Type": "text/event-stream",
@@ -129,6 +131,7 @@ app.get("/api/sync/:room/events", async (req, res) => {
 
   req.on("close", () => {
     state.clients.delete(client);
+    schedulePresenceDisconnect(state, identity);
   });
 });
 
@@ -149,6 +152,7 @@ app.post("/api/sync/:room/presence", async (req, res) => {
     claimedOfficeName: claim?.zoneName,
     lastSeen: Date.now()
   };
+  clearDisconnectTimer(state, nextPresence.identity);
   state.presences.set(nextPresence.identity, nextPresence);
   broadcast(state, { type: "presence", presence: nextPresence }, nextPresence.identity);
   res.json({ ok: true, serverTime: nextPresence.lastSeen });
@@ -162,6 +166,7 @@ app.post("/api/sync/:room/presence/leave", async (req, res) => {
     res.status(400).json({ error: "INVALID_IDENTITY" });
     return;
   }
+  clearDisconnectTimer(state, identity);
   if (state.presences.delete(identity)) {
     broadcast(state, { type: "presence-left", identity }, identity);
   }
@@ -320,6 +325,7 @@ setInterval(() => {
       }
     }
     if (state.clients.size === 0 && state.presences.size === 0 && now - state.lastTouched > ROOM_IDLE_TTL_MS) {
+      for (const timer of state.disconnectTimers.values()) clearTimeout(timer);
       rooms.delete(state.room);
     }
   }
@@ -346,6 +352,7 @@ async function getRoomState(room) {
     messages: Array.isArray(persisted?.messages) ? persisted.messages.slice(-MAX_CHAT_MESSAGES) : [],
     presences: new Map(),
     clients: new Set(),
+    disconnectTimers: new Map(),
     saveTimer: undefined,
     lastTouched: Date.now()
   };
@@ -385,6 +392,35 @@ function broadcastClaimState(state, identity) {
     broadcast(state, { type: "presence", presence }, identity);
   }
   broadcast(state, { type: "claims", claims: Array.from(state.claimsByZone.values()) });
+}
+
+function clearDisconnectTimer(state, identity) {
+  if (!identity) return;
+  const timer = state.disconnectTimers.get(identity);
+  if (!timer) return;
+  clearTimeout(timer);
+  state.disconnectTimers.delete(identity);
+}
+
+function schedulePresenceDisconnect(state, identity) {
+  if (!identity || hasConnectedClient(state, identity) || state.disconnectTimers.has(identity)) return;
+  const timer = setTimeout(() => {
+    state.disconnectTimers.delete(identity);
+    if (hasConnectedClient(state, identity)) return;
+    if (state.presences.delete(identity)) {
+      touchRoom(state);
+      broadcast(state, { type: "presence-left", identity }, identity);
+    }
+  }, DISCONNECT_GRACE_MS);
+  timer.unref?.();
+  state.disconnectTimers.set(identity, timer);
+}
+
+function hasConnectedClient(state, identity) {
+  for (const client of state.clients) {
+    if (client.identity === identity) return true;
+  }
+  return false;
 }
 
 function broadcast(state, packet, exceptIdentity) {

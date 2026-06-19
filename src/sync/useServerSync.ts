@@ -58,6 +58,8 @@ export function useServerSync(session: Session | null, local: PlayerPresence | n
   const lastPresencePostRef = useRef(0);
   const lastPresenceDigestRef = useRef("");
   const presenceTimerRef = useRef<number | undefined>();
+  const queuedMapRef = useRef<SyncedOfficeMap | null>(null);
+  const mapPostInFlightRef = useRef(false);
 
   useEffect(() => {
     mapRef.current = map;
@@ -149,17 +151,8 @@ export function useServerSync(session: Session | null, local: PlayerPresence | n
       const next = updater(current);
       mapRef.current = next;
       if (currentSession) {
-        void postJson(`/api/sync/${encodeURIComponent(currentSession.room)}/map`, {
-          identity: currentSession.identity,
-          baseRevision: revisionRef.current,
-          map: serializeMap(next)
-        })
-          .then((body) => {
-            if (typeof body?.revision === "number") setMapRevision(body.revision);
-          })
-          .catch((postError) => {
-            setError(postError instanceof Error ? postError.message : "Unable to sync the map.");
-          });
+        queuedMapRef.current = serializeMap(next);
+        void flushMapPost(currentSession.room, currentSession.identity);
       }
       return next;
     });
@@ -222,6 +215,19 @@ export function useServerSync(session: Session | null, local: PlayerPresence | n
       void postJson(url, { identity }).catch(() => undefined);
     }
   }, []);
+
+  useEffect(() => {
+    if (!session) return;
+    const notifyLeave = () => {
+      leave(localRef.current?.identity || session.identity);
+    };
+    window.addEventListener("pagehide", notifyLeave);
+    window.addEventListener("beforeunload", notifyLeave);
+    return () => {
+      window.removeEventListener("pagehide", notifyLeave);
+      window.removeEventListener("beforeunload", notifyLeave);
+    };
+  }, [leave, session?.identity, session?.room]);
 
   function applyPacket(packet: ServerPacket, localIdentity: string) {
     if (packet.type === "snapshot") {
@@ -309,6 +315,34 @@ export function useServerSync(session: Session | null, local: PlayerPresence | n
     }).catch((postError) => {
       setError(postError instanceof Error ? postError.message : "Unable to sync presence.");
     });
+  }
+
+  async function flushMapPost(room: string, identity: string) {
+    if (mapPostInFlightRef.current || !queuedMapRef.current) return;
+
+    const mapPayload = queuedMapRef.current;
+    queuedMapRef.current = null;
+    mapPostInFlightRef.current = true;
+
+    try {
+      const body = await postJson(`/api/sync/${encodeURIComponent(room)}/map`, {
+        identity,
+        baseRevision: revisionRef.current,
+        map: mapPayload
+      });
+      if (typeof body?.revision === "number") {
+        revisionRef.current = body.revision;
+        setMapRevision(body.revision);
+      }
+    } catch (postError) {
+      setError(postError instanceof Error ? postError.message : "Unable to sync the map.");
+    } finally {
+      mapPostInFlightRef.current = false;
+      const currentSession = sessionRef.current;
+      if (queuedMapRef.current && currentSession) {
+        void flushMapPost(currentSession.room, currentSession.identity);
+      }
+    }
   }
 
   return {

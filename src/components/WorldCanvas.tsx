@@ -20,6 +20,7 @@ import {
   isBroadcastZone,
   TILE,
   withRebuiltCollision,
+  type FloorArea,
   type ObjectPlacement,
   type OfficeMap,
   type Rect,
@@ -774,17 +775,19 @@ function drawEditorGrid(
     if (zoneFilter && zoneType !== zoneFilter) continue;
     const color = zoneColor(zoneType, zone.subType);
     ctx.save();
-    ctx.globalAlpha = zone.blocks ? 0.22 : isBroadcastZone(zone) ? 0.22 : 0.13;
+    ctx.globalAlpha = zone.blocks ? 0.4 : isBroadcastZone(zone) ? 0.36 : 0.28;
     ctx.fillStyle = color;
     ctx.fillRect(zone.x, zone.y, zone.w, zone.h);
-    ctx.globalAlpha = 0.74;
+    ctx.globalAlpha = 0.96;
     ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth * 1.35;
     ctx.strokeRect(zone.x + lineWidth / 2, zone.y + lineWidth / 2, zone.w - lineWidth, zone.h - lineWidth);
     ctx.restore();
   }
 
   ctx.beginPath();
-  ctx.strokeStyle = "rgba(246, 242, 235, 0.3)";
+  ctx.lineWidth = lineWidth;
+  ctx.strokeStyle = "rgba(246, 242, 235, 0.4)";
   for (let x = startX; x <= endX; x += TILE) {
     ctx.moveTo(x, startY);
     ctx.lineTo(x, endY);
@@ -796,7 +799,7 @@ function drawEditorGrid(
   ctx.stroke();
 
   ctx.beginPath();
-  ctx.strokeStyle = "rgba(73, 197, 143, 0.56)";
+  ctx.strokeStyle = "rgba(0, 230, 166, 0.7)";
   for (let x = startX; x <= endX; x += TILE * 4) {
     ctx.moveTo(x, startY);
     ctx.lineTo(x, endY);
@@ -807,7 +810,7 @@ function drawEditorGrid(
   }
   ctx.stroke();
 
-  ctx.strokeStyle = "rgba(73, 197, 143, 0.88)";
+  ctx.strokeStyle = "rgba(0, 230, 166, 0.98)";
   ctx.strokeRect(0, 0, map.width, map.height);
   ctx.restore();
 }
@@ -852,12 +855,12 @@ function drawEditorPreview(
       drawEraseRect(ctx, preview.rect);
     } else {
       const color = zoneColor(preview.zoneType, preview.zoneSubType);
-      ctx.globalAlpha = 0.24;
+      ctx.globalAlpha = 0.42;
       ctx.fillStyle = color;
       ctx.fillRect(preview.rect.x, preview.rect.y, preview.rect.w, preview.rect.h);
-      ctx.globalAlpha = 0.88;
+      ctx.globalAlpha = 1;
       ctx.strokeStyle = color;
-      ctx.lineWidth = 1;
+      ctx.lineWidth = 1.5;
       ctx.strokeRect(preview.rect.x + 0.5, preview.rect.y + 0.5, preview.rect.w - 1, preview.rect.h - 1);
     }
   } else if (preview.kind === "object-delete") {
@@ -878,11 +881,11 @@ function drawPlaceRect(ctx: CanvasRenderingContext2D, rect: Rect) {
 
 function drawEraseRect(ctx: CanvasRenderingContext2D, rect: Rect) {
   ctx.save();
-  ctx.globalAlpha = 0.34;
-  ctx.fillStyle = "#ed4245";
+  ctx.globalAlpha = 0.44;
+  ctx.fillStyle = "#ff2d55";
   ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
   ctx.globalAlpha = 0.95;
-  ctx.strokeStyle = "#ff6b6b";
+  ctx.strokeStyle = "#ff758f";
   ctx.lineWidth = 1;
   ctx.strokeRect(rect.x + 0.5, rect.y + 0.5, rect.w - 1, rect.h - 1);
   ctx.restore();
@@ -945,7 +948,7 @@ function applyBuildEdit(map: OfficeMap, tool: MapEditorTool, rect: Rect): Office
     return withRebuiltCollision({
       ...map,
       walls: map.walls.filter((wall) => !tileInRect(wall.x, wall.y, rect)),
-      floorAreas: map.floorAreas.filter((area) => !area.editorPlaced || !rectsIntersect(area, rect))
+      floorAreas: subtractEditorFloorAreas(map.floorAreas, rect)
     });
   }
 
@@ -953,7 +956,7 @@ function applyBuildEdit(map: OfficeMap, tool: MapEditorTool, rect: Rect): Office
     return withRebuiltCollision({
       ...map,
       floorAreas: [
-        ...map.floorAreas.filter((area) => !area.editorPlaced || !rectsIntersect(area, rect)),
+        ...subtractEditorFloorAreas(map.floorAreas, rect),
         { ...rect, asset: tool.selectedAsset, editorPlaced: true }
       ]
     });
@@ -970,6 +973,36 @@ function applyBuildEdit(map: OfficeMap, tool: MapEditorTool, rect: Rect): Office
   }
 
   return map;
+}
+
+function subtractEditorFloorAreas(areas: FloorArea[], cutter: Rect) {
+  return areas.flatMap((area) => (area.editorPlaced ? subtractFloorArea(area, cutter) : [area]));
+}
+
+function subtractFloorArea(area: FloorArea, cutter: Rect): FloorArea[] {
+  if (!rectsIntersect(area, cutter)) return [area];
+
+  const ax1 = area.x;
+  const ay1 = area.y;
+  const ax2 = area.x + area.w;
+  const ay2 = area.y + area.h;
+  const cx1 = Math.max(ax1, cutter.x);
+  const cy1 = Math.max(ay1, cutter.y);
+  const cx2 = Math.min(ax2, cutter.x + cutter.w);
+  const cy2 = Math.min(ay2, cutter.y + cutter.h);
+  const pieces: FloorArea[] = [];
+
+  pushFloorPiece(pieces, area, ax1, ay1, area.w, cy1 - ay1);
+  pushFloorPiece(pieces, area, ax1, cy2, area.w, ay2 - cy2);
+  pushFloorPiece(pieces, area, ax1, cy1, cx1 - ax1, cy2 - cy1);
+  pushFloorPiece(pieces, area, cx2, cy1, ax2 - cx2, cy2 - cy1);
+
+  return pieces;
+}
+
+function pushFloorPiece(pieces: FloorArea[], source: FloorArea, x: number, y: number, w: number, h: number) {
+  if (w <= 0 || h <= 0) return;
+  pieces.push({ ...source, x, y, w, h });
 }
 
 function createEditorZone(map: OfficeMap, tool: MapEditorTool, rect: Rect): Zone {
@@ -1107,11 +1140,11 @@ function rectsIntersect(a: Rect, b: Rect) {
 }
 
 function zoneColor(type: MapEditorTool["selectedZoneType"], subType?: Zone["subType"]) {
-  if (subType === "broadcast") return "#d870e8";
-  if (type === "hitbox") return "#ed4245";
-  if (type === "meeting") return "#6674d8";
-  if (type === "living") return "#49c58f";
-  return "#e7b84b";
+  if (subType === "broadcast") return "#ff4fd8";
+  if (type === "hitbox") return "#ff2d55";
+  if (type === "meeting") return "#4d7cff";
+  if (type === "living") return "#00e676";
+  return "#ffd43b";
 }
 
 function zoneTypeForPreview(zone: Zone): MapEditorTool["selectedZoneType"] {

@@ -74,13 +74,12 @@ function markTiles(collision: boolean[][], rect: Rect) {
 
 function addWall(
   walls: WallTile[],
-  collision: boolean[][],
+  _collision: boolean[][],
   x: number,
   y: number,
   asset: AssetId
 ) {
   walls.push({ x, y, asset });
-  collision[y][x] = true;
 }
 
 export function rebuildCollision(map: Pick<OfficeMap, "width" | "height" | "walls" | "objects" | "zones">) {
@@ -89,12 +88,6 @@ export function rebuildCollision(map: Pick<OfficeMap, "width" | "height" | "wall
   const collision = Array.from({ length: tileHeight }, () =>
     Array.from({ length: tileWidth }, () => false)
   );
-
-  for (const wall of map.walls) {
-    if (wall.y >= 0 && wall.y < tileHeight && wall.x >= 0 && wall.x < tileWidth) {
-      collision[wall.y][wall.x] = true;
-    }
-  }
 
   for (const object of map.objects) {
     if (!object.solid) continue;
