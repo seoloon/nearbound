@@ -6,8 +6,9 @@ import { LocalScreenPreview } from "./components/ScreenPreview";
 import { avatarAccent } from "./avatar";
 import { WorldCanvas } from "./components/WorldCanvas";
 import { DEFAULT_MAP_EDITOR_TOOL, type MapEditorTool } from "./game/editor";
-import { createOfficeMap, getLocalMediaAccess, getZoneAt, type OfficeMap, type Zone } from "./game/map";
+import { getLocalMediaAccess, getZoneAt, type OfficeMap, type Zone } from "./game/map";
 import { useLiveKitRoom } from "./livekit/useLiveKitRoom";
+import { useServerSync } from "./sync/useServerSync";
 import type { AppConfig, PlayerPresence, Session, UserStatus } from "./types";
 
 const DEFAULT_CONFIG: AppConfig = {
@@ -15,15 +16,15 @@ const DEFAULT_CONFIG: AppConfig = {
   defaultRoom: "nearbound-open-space",
   livekitConfigured: false
 };
-const OFFICE_CLAIM_KEY_PREFIX = "nearbound.officeClaim.v1";
 
 export function App() {
-  const [map, setMap] = useState(() => createOfficeMap());
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [local, setLocal] = useState<PlayerPresence | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorTool, setEditorTool] = useState<MapEditorTool>(DEFAULT_MAP_EDITOR_TOOL);
+  const sync = useServerSync(session, local);
+  const map = sync.map;
 
   useEffect(() => {
     let cancelled = false;
@@ -40,13 +41,12 @@ export function App() {
     };
   }, []);
 
-  const livekit = useLiveKitRoom(session, local, map, Boolean(config?.livekitConfigured));
+  const livekit = useLiveKitRoom(session, local, sync.remotePresences, map, Boolean(config?.livekitConfigured));
 
   const handleJoin = useCallback(
     (nextSession: Session) => {
       const spawn = map.spawn;
       const zone = getZoneAt(map, spawn.x, spawn.y);
-      const claim = readOfficeClaim(nextSession, map);
       setSession(nextSession);
       setLocal({
         identity: nextSession.identity,
@@ -60,8 +60,6 @@ export function App() {
         direction: "down",
         moving: false,
         zoneId: zone?.id,
-        claimedOfficeId: claim?.id,
-        claimedOfficeName: claim?.name,
         lastSeen: Date.now()
       });
     },
@@ -73,14 +71,15 @@ export function App() {
   }, []);
 
   const handleMapChange = useCallback((updater: (current: OfficeMap) => OfficeMap) => {
-    setMap((current) => updater(current));
-  }, []);
+    sync.updateMap(updater);
+  }, [sync]);
 
   const handleLeave = useCallback(() => {
+    if (local) sync.leave(local.identity);
     setEditorOpen(false);
     setSession(null);
     setLocal(null);
-  }, []);
+  }, [local, sync]);
 
   const handleProfileChange = useCallback((profile: { status?: UserStatus; bio?: string }) => {
     setLocal((current) => {
@@ -96,41 +95,45 @@ export function App() {
 
   const handleClaimOffice = useCallback(
     (zone: Zone) => {
-      if (!session) return;
-      writeOfficeClaim(session, zone);
+      const currentLocal = local;
+      if (!currentLocal) return;
+      void sync.claimOffice(zone, currentLocal).then((claim) => {
+        if (!claim) return;
+        setLocal((current) =>
+          current
+            ? {
+                ...current,
+                claimedOfficeId: claim.zoneId,
+                claimedOfficeName: claim.zoneName,
+                lastSeen: Date.now()
+              }
+            : current
+        );
+      });
+    },
+    [local, sync]
+  );
+
+  const handleReleaseOffice = useCallback(() => {
+    const currentLocal = local;
+    if (!currentLocal) return;
+    void sync.releaseOffice(currentLocal).then(() => {
       setLocal((current) =>
         current
           ? {
               ...current,
-              claimedOfficeId: zone.id,
-              claimedOfficeName: zone.name,
+              claimedOfficeId: undefined,
+              claimedOfficeName: undefined,
               lastSeen: Date.now()
             }
           : current
       );
-    },
-    [session]
-  );
-
-  const handleReleaseOffice = useCallback(() => {
-    if (!session) return;
-    clearOfficeClaim(session);
-    setLocal((current) =>
-      current
-        ? {
-            ...current,
-            claimedOfficeId: undefined,
-            claimedOfficeName: undefined,
-            lastSeen: Date.now()
-          }
-        : current
-    );
-  }, [session]);
+    });
+  }, [local, sync]);
 
   useEffect(() => {
-    if (!session || !local?.claimedOfficeId) return;
+    if (!local?.claimedOfficeId) return;
     if (map.zones.some((zone) => zone.id === local.claimedOfficeId)) return;
-    clearOfficeClaim(session);
     setLocal((current) =>
       current
         ? {
@@ -141,13 +144,26 @@ export function App() {
           }
         : current
     );
-  }, [local?.claimedOfficeId, map, session]);
+  }, [local?.claimedOfficeId, map]);
+
+  useEffect(() => {
+    if (!local || sync.mapRevision === 0) return;
+    const claim = sync.officeClaims.find((item) => item.identity === local.identity);
+    if (claim?.zoneId === local.claimedOfficeId && claim?.zoneName === local.claimedOfficeName) return;
+    if (!claim && !local.claimedOfficeId) return;
+    setLocal({
+      ...local,
+      claimedOfficeId: claim?.zoneId,
+      claimedOfficeName: claim?.zoneName,
+      lastSeen: Date.now()
+    });
+  }, [local, sync.mapRevision, sync.officeClaims]);
 
   if (!session || !local) {
     return <LoginScreen config={config} onJoin={handleJoin} />;
   }
 
-  const remotes = Object.values(livekit.remotePresences);
+  const remotes = Object.values(sync.remotePresences);
   const connected = livekit.status === "connected";
   const preview = livekit.status === "preview";
   const mediaAccess = getLocalMediaAccess(local, map);
@@ -163,6 +179,7 @@ export function App() {
         mediaVersion={livekit.mediaVersion}
         showEditorGrid={editorOpen}
         editorTool={editorTool}
+        officeClaims={sync.officeClaims}
         onEditorToolChange={setEditorTool}
         onMapChange={handleMapChange}
         onClaimOffice={handleClaimOffice}
@@ -174,17 +191,19 @@ export function App() {
         room={livekit.room}
         map={map}
         local={local}
-        remotePresences={livekit.remotePresences}
-        messages={livekit.chatMessages}
+        remotePresences={sync.remotePresences}
+        messages={sync.chatMessages}
         mediaVersion={livekit.mediaVersion}
         deafened={livekit.media.deafened}
         status={livekit.status}
-        error={livekit.error}
+        error={livekit.error || sync.error}
         mediaError={livekit.mediaError}
         editorOpen={editorOpen}
         editorTool={editorTool}
+        voiceVolumes={sync.voiceVolumes}
+        onVoiceVolumesChange={sync.updateVoiceVolumes}
         onEditorToolChange={setEditorTool}
-        onSendMessage={(text) => void livekit.sendChat(text)}
+        onSendMessage={(text) => void sync.sendChat(local, text)}
         onLeave={handleLeave}
         onEditorToggle={() => setEditorOpen((value) => !value)}
       />
@@ -206,28 +225,4 @@ export function App() {
       />
     </main>
   );
-}
-
-function officeClaimKey(session: Session) {
-  return `${OFFICE_CLAIM_KEY_PREFIX}:${session.room}:${session.identity}`;
-}
-
-function readOfficeClaim(session: Session, map: OfficeMap) {
-  try {
-    const stored = window.localStorage.getItem(officeClaimKey(session));
-    if (!stored) return undefined;
-    const claim = JSON.parse(stored) as { id?: string; name?: string };
-    if (!claim.id || !map.zones.some((zone) => zone.id === claim.id)) return undefined;
-    return { id: claim.id, name: claim.name || "Office" };
-  } catch {
-    return undefined;
-  }
-}
-
-function writeOfficeClaim(session: Session, zone: Zone) {
-  window.localStorage.setItem(officeClaimKey(session), JSON.stringify({ id: zone.id, name: zone.name }));
-}
-
-function clearOfficeClaim(session: Session) {
-  window.localStorage.removeItem(officeClaimKey(session));
 }

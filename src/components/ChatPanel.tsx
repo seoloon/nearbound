@@ -4,7 +4,7 @@ import type { CSSProperties, Dispatch, FormEvent, ReactElement, SetStateAction }
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { MapEditorTool } from "../game/editor";
 import { getAudibility, type OfficeMap } from "../game/map";
-import type { ChatMessage, PlayerPresence } from "../types";
+import type { ChatMessage, PlayerPresence, VoiceVolumeSettings } from "../types";
 import { MapEditorPanel } from "./MapEditorPanel";
 import { PixelAvatar } from "./PixelAvatar";
 
@@ -21,6 +21,8 @@ interface ChatPanelProps {
   mediaError?: string;
   editorOpen: boolean;
   editorTool: MapEditorTool;
+  voiceVolumes: VoiceVolumeSettings;
+  onVoiceVolumesChange: Dispatch<SetStateAction<VoiceVolumeSettings>>;
   onEditorToolChange: (tool: MapEditorTool) => void;
   onSendMessage: (text: string) => void;
   onLeave: () => void;
@@ -34,12 +36,6 @@ interface NearbyParticipant {
   distanceTiles: number;
 }
 
-interface VoiceVolumeSettings {
-  master: number;
-  users: Record<string, number>;
-}
-
-const VOICE_VOLUME_KEY = "nearbound.voiceVolumes.v1";
 const MAX_VOICE_VOLUME = 2;
 const MAX_OUTPUT_GAIN = 4;
 const VOICE_OUTPUT_BOOST = 1.3;
@@ -65,6 +61,8 @@ export function ChatPanel({
   mediaError,
   editorOpen,
   editorTool,
+  voiceVolumes,
+  onVoiceVolumesChange,
   onEditorToolChange,
   onSendMessage,
   onLeave,
@@ -74,7 +72,6 @@ export function ChatPanel({
   const [draft, setDraft] = useState("");
   const [expandedStream, setExpandedStream] = useState<RemoteTrackPublication | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [voiceVolumes, setVoiceVolumes] = usePersistentVoiceVolumes();
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   const nearby = useMemo<NearbyParticipant[]>(() => {
@@ -152,7 +149,7 @@ export function ChatPanel({
           <SettingsModal
             presences={remotePresenceList}
             voiceVolumes={voiceVolumes}
-            onVoiceVolumesChange={setVoiceVolumes}
+            onVoiceVolumesChange={onVoiceVolumesChange}
             onClose={() => setSettingsOpen(false)}
           />
         )}
@@ -192,7 +189,7 @@ export function ChatPanel({
           <SettingsModal
             presences={remotePresenceList}
             voiceVolumes={voiceVolumes}
-            onVoiceVolumesChange={setVoiceVolumes}
+            onVoiceVolumesChange={onVoiceVolumesChange}
             onClose={() => setSettingsOpen(false)}
           />
         )}
@@ -303,7 +300,7 @@ export function ChatPanel({
         <SettingsModal
           presences={remotePresenceList}
           voiceVolumes={voiceVolumes}
-          onVoiceVolumesChange={setVoiceVolumes}
+          onVoiceVolumesChange={onVoiceVolumesChange}
           onClose={() => setSettingsOpen(false)}
         />
       )}
@@ -714,30 +711,6 @@ function publicationFor(participant: RemoteParticipant, source: Track.Source) {
   return Array.from(participant.trackPublications.values()).find(
     (publication) => publication.source === source
   ) as RemoteTrackPublication | undefined;
-}
-
-function usePersistentVoiceVolumes() {
-  const [settings, setSettings] = useState<VoiceVolumeSettings>(() => {
-    try {
-      const stored = window.localStorage.getItem(VOICE_VOLUME_KEY);
-      if (!stored) return defaultVoiceVolumes();
-      const parsed = JSON.parse(stored) as Partial<VoiceVolumeSettings>;
-      return {
-        master: clampVolume(parsed.master),
-        users: Object.fromEntries(
-          Object.entries(parsed.users || {}).map(([identity, value]) => [identity, clampVolume(value)])
-        )
-      };
-    } catch {
-      return defaultVoiceVolumes();
-    }
-  });
-
-  useEffect(() => {
-    window.localStorage.setItem(VOICE_VOLUME_KEY, JSON.stringify(settings));
-  }, [settings]);
-
-  return [settings, setSettings] as const;
 }
 
 function clampVolume(value: unknown) {

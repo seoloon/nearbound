@@ -7,7 +7,7 @@ import {
 } from "livekit-client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { normalizeAvatarStyle } from "../avatar";
-import type { AvatarStyle, ChatMessage, LiveKitTokenResponse, PlayerPresence, Session, UserStatus } from "../types";
+import type { AvatarStyle, LiveKitTokenResponse, PlayerPresence, Session, UserStatus } from "../types";
 import { getAudibility, getLocalMediaAccess, type OfficeMap, TILE } from "../game/map";
 
 type ConnectionStatus = "preview" | "connecting" | "connected" | "error";
@@ -19,53 +19,23 @@ interface LocalMediaState {
   screen: boolean;
 }
 
-interface PresencePacket {
-  type: "presence";
-  identity: string;
-  name: string;
-  color: string;
-  avatar?: AvatarStyle;
-  status: UserStatus;
-  bio: string;
-  x: number;
-  y: number;
-  direction: PlayerPresence["direction"];
-  moving: boolean;
-  zoneId?: string;
-  claimedOfficeId?: string;
-  claimedOfficeName?: string;
-  t: number;
-}
-
-interface ChatPacket {
-  type: "chat";
-  id: string;
-  text: string;
-  sentAt: number;
-}
-
 export interface LiveKitBridge {
   room: Room | null;
   status: ConnectionStatus;
   error?: string;
   mediaError?: string;
   media: LocalMediaState;
-  remotePresences: Record<string, PlayerPresence>;
-  chatMessages: ChatMessage[];
   mediaVersion: number;
   toggleMic: () => Promise<void>;
   toggleDeafen: () => void;
   toggleCamera: () => Promise<void>;
   toggleScreen: () => Promise<void>;
-  sendChat: (text: string) => Promise<void>;
 }
-
-const encoder = new TextEncoder();
-const decoder = new TextDecoder();
 
 export function useLiveKitRoom(
   session: Session | null,
   local: PlayerPresence | null,
+  remotePresences: Record<string, PlayerPresence>,
   map: OfficeMap,
   enabled: boolean
 ): LiveKitBridge {
@@ -74,11 +44,8 @@ export function useLiveKitRoom(
   const [error, setError] = useState<string | undefined>();
   const [mediaError, setMediaError] = useState<string | undefined>();
   const [media, setMedia] = useState<LocalMediaState>({ mic: false, deafened: false, camera: false, screen: false });
-  const [remotePresences, setRemotePresences] = useState<Record<string, PlayerPresence>>({});
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [mediaVersion, setMediaVersion] = useState(0);
   const localRef = useRef<PlayerPresence | null>(local);
-  const lastPublishedRef = useRef(0);
 
   useEffect(() => {
     localRef.current = local;
@@ -98,83 +65,14 @@ export function useLiveKitRoom(
     });
 
     const bumpMedia = () => setMediaVersion((version) => version + 1);
-    const upsertParticipantPresence = (participant: RemoteParticipant) => {
-      setRemotePresences((previous) => {
-        if (previous[participant.identity]) return previous;
-        return {
-          ...previous,
-          [participant.identity]: fallbackPresence(participant, map)
-        };
-      });
-    };
-
-    const removeParticipantPresence = (participant: RemoteParticipant) => {
-      setRemotePresences((previous) => {
-        const next = { ...previous };
-        delete next[participant.identity];
-        return next;
-      });
-    };
-
-    const handleDataReceived = (
-      payload: Uint8Array,
-      participant?: RemoteParticipant,
-      _kind?: unknown,
-      topic?: string
-    ) => {
-      if (!participant) return;
-      try {
-        const packet = JSON.parse(decoder.decode(payload)) as PresencePacket | ChatPacket;
-        if (topic === "chat" || packet.type === "chat") {
-          if (packet.type !== "chat") return;
-          const message: ChatMessage = {
-            id: packet.id,
-            identity: participant.identity,
-            name: participant.name || participant.identity,
-            color: readColor(participant),
-            text: packet.text,
-            sentAt: packet.sentAt
-          };
-          setChatMessages((previous) => appendMessage(previous, message));
-          return;
-        }
-
-        if (topic && topic !== "presence") return;
-        if (packet.type !== "presence") return;
-        setRemotePresences((previous) => ({
-          ...previous,
-          [participant.identity]: {
-            identity: participant.identity,
-            name: packet.name || participant.name || participant.identity,
-            color: packet.color || readColor(participant),
-            avatar: normalizeAvatarStyle(packet.avatar, packet.color || readColor(participant)),
-            status: packet.status || "available",
-            bio: packet.bio || "",
-            x: packet.x,
-            y: packet.y,
-            direction: packet.direction || "down",
-            moving: Boolean(packet.moving),
-            zoneId: packet.zoneId,
-            claimedOfficeId: packet.claimedOfficeId,
-            claimedOfficeName: packet.claimedOfficeName,
-            lastSeen: Date.now()
-          }
-        }));
-      } catch {
-        // Ignore non-presence app data.
-      }
-    };
 
     nextRoom
-      .on(RoomEvent.ParticipantConnected, upsertParticipantPresence)
-      .on(RoomEvent.ParticipantDisconnected, removeParticipantPresence)
       .on(RoomEvent.TrackPublished, bumpMedia)
       .on(RoomEvent.TrackUnpublished, bumpMedia)
       .on(RoomEvent.TrackSubscribed, bumpMedia)
       .on(RoomEvent.TrackUnsubscribed, bumpMedia)
       .on(RoomEvent.TrackMuted, bumpMedia)
-      .on(RoomEvent.TrackUnmuted, bumpMedia)
-      .on(RoomEvent.DataReceived, handleDataReceived);
+      .on(RoomEvent.TrackUnmuted, bumpMedia);
 
     async function connect() {
       setStatus("connecting");
@@ -200,10 +98,8 @@ export function useLiveKitRoom(
         const tokenResponse = (await response.json()) as LiveKitTokenResponse;
         await nextRoom.connect(tokenResponse.url, tokenResponse.token, { autoSubscribe: false });
         if (cancelled) return;
-        nextRoom.remoteParticipants.forEach(upsertParticipantPresence);
         setRoom(nextRoom);
         setStatus("connected");
-        publishPresence(nextRoom, localRef.current, true);
       } catch (connectError) {
         if (cancelled) return;
         setStatus("error");
@@ -220,34 +116,8 @@ export function useLiveKitRoom(
       void nextRoom.disconnect();
       setRoom((current) => (current === nextRoom ? null : current));
       setMedia({ mic: false, deafened: false, camera: false, screen: false });
-      setRemotePresences({});
     };
-  }, [session?.identity, session?.room, enabled, map]);
-
-  useEffect(() => {
-    if (!room || !local) return;
-    const now = Date.now();
-    if (now - lastPublishedRef.current < 50) return;
-    lastPublishedRef.current = now;
-    publishPresence(room, local, false);
-  }, [
-    room,
-    local?.x,
-    local?.y,
-    local?.direction,
-    local?.moving,
-    local?.zoneId,
-    local?.status,
-    local?.bio,
-    local?.claimedOfficeId,
-    local?.claimedOfficeName
-  ]);
-
-  useEffect(() => {
-    if (!room) return;
-    const id = window.setInterval(() => publishPresence(room, localRef.current, true), 2500);
-    return () => window.clearInterval(id);
-  }, [room]);
+  }, [session?.identity, session?.room, enabled]);
 
   useEffect(() => {
     if (!room || !local) return;
@@ -345,77 +215,18 @@ export function useLiveKitRoom(
     }
   }, [room, map, media.screen]);
 
-  const sendChat = useCallback(
-    async (text: string) => {
-      const body = text.trim().slice(0, 500);
-      const currentLocal = localRef.current;
-      if (!body || !currentLocal) return;
-      const message: ChatMessage = {
-        id: crypto.randomUUID(),
-        identity: currentLocal.identity,
-        name: currentLocal.name,
-        color: currentLocal.color,
-        text: body,
-        sentAt: Date.now(),
-        local: true
-      };
-      setChatMessages((previous) => appendMessage(previous, message));
-
-      if (!room || room.state !== "connected") return;
-      const packet: ChatPacket = {
-        type: "chat",
-        id: message.id,
-        text: message.text,
-        sentAt: message.sentAt
-      };
-      await room.localParticipant.publishData(encoder.encode(JSON.stringify(packet)), {
-        reliable: true,
-        topic: "chat"
-      });
-    },
-    [room]
-  );
-
   return {
     room,
     status,
     error,
     mediaError,
     media,
-    remotePresences,
-    chatMessages,
     mediaVersion,
     toggleMic,
     toggleDeafen,
     toggleCamera,
-    toggleScreen,
-    sendChat
+    toggleScreen
   };
-}
-
-function publishPresence(room: Room, local: PlayerPresence | null, reliable: boolean) {
-  if (!local || room.state !== "connected") return;
-  const packet: PresencePacket = {
-    type: "presence",
-    identity: local.identity,
-    name: local.name,
-    color: local.color,
-    avatar: local.avatar,
-    status: local.status,
-    bio: local.bio,
-    x: Math.round(local.x),
-    y: Math.round(local.y),
-    direction: local.direction,
-    moving: local.moving,
-    zoneId: local.zoneId,
-    claimedOfficeId: local.claimedOfficeId,
-    claimedOfficeName: local.claimedOfficeName,
-    t: Date.now()
-  };
-
-  void room.localParticipant
-    .publishData(encoder.encode(JSON.stringify(packet)), { reliable, topic: "presence" })
-    .catch(() => undefined);
 }
 
 function isMediaPublication(publication: RemoteTrackPublication) {
@@ -425,15 +236,6 @@ function isMediaPublication(publication: RemoteTrackPublication) {
     publication.source === Track.Source.ScreenShare ||
     publication.source === Track.Source.ScreenShareAudio
   );
-}
-
-function readColor(participant: RemoteParticipant) {
-  try {
-    const metadata = JSON.parse(participant.metadata || "{}") as { color?: string; avatar?: AvatarStyle };
-    return metadata.color || normalizeAvatarStyle(metadata.avatar).topColor;
-  } catch {
-    return "#2fbf71";
-  }
 }
 
 function readProfile(participant: RemoteParticipant) {
@@ -475,11 +277,6 @@ function fallbackPresence(participant: RemoteParticipant, map: OfficeMap): Playe
     claimedOfficeName: undefined,
     lastSeen: Date.now()
   };
-}
-
-function appendMessage(messages: ChatMessage[], message: ChatMessage) {
-  if (messages.some((item) => item.id === message.id)) return messages;
-  return [...messages, message].slice(-120);
 }
 
 function hash(value: string) {

@@ -57,6 +57,8 @@ export interface OfficeMap {
   collision: boolean[][];
 }
 
+export type SyncedOfficeMap = Omit<OfficeMap, "collision">;
+
 function markTiles(collision: boolean[][], rect: Rect) {
   const sx = Math.max(0, Math.floor(rect.x / TILE));
   const sy = Math.max(0, Math.floor(rect.y / TILE));
@@ -116,6 +118,25 @@ export function withRebuiltCollision(map: OfficeMap): OfficeMap {
     ...map,
     collision: rebuildCollision(map)
   };
+}
+
+export function serializeMap(map: OfficeMap): SyncedOfficeMap {
+  return {
+    width: map.width,
+    height: map.height,
+    spawn: map.spawn,
+    floorAreas: map.floorAreas,
+    walls: map.walls,
+    objects: map.objects,
+    zones: map.zones
+  };
+}
+
+export function hydrateMap(map: SyncedOfficeMap): OfficeMap {
+  return withRebuiltCollision({
+    ...map,
+    collision: []
+  });
 }
 
 export function createOfficeMap(): OfficeMap {

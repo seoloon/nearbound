@@ -33,6 +33,19 @@ export interface PlayerPresence {
   lastSeen: number;
 }
 
+export interface OfficeClaim {
+  identity: string;
+  name: string;
+  zoneId: string;
+  zoneName: string;
+  claimedAt: number;
+}
+
+export interface VoiceVolumeSettings {
+  master: number;
+  users: Record<string, number>;
+}
+
 export interface AppConfig {
   appName: string;
   defaultRoom: string;
