@@ -3,7 +3,7 @@ import type { MutableRefObject, PointerEvent, WheelEvent } from "react";
 import { Room, Track } from "livekit-client";
 import { loadOfficeImages, type ImageMap } from "../game/assets";
 import { drawWorld } from "../game/renderer";
-import { getZoneAt, isBlocked, type OfficeMap } from "../game/map";
+import { getZoneAt, isBlocked, TILE, type OfficeMap } from "../game/map";
 import type { PlayerPresence } from "../types";
 
 interface WorldCanvasProps {
@@ -13,6 +13,7 @@ interface WorldCanvasProps {
   room: Room | null;
   cameraActive: boolean;
   mediaVersion: number;
+  showEditorGrid?: boolean;
   onLocalChange: (presence: PlayerPresence) => void;
 }
 
@@ -61,7 +62,16 @@ const ZOOM_STEP = 1.12;
 const REMOTE_SMOOTHING = 11;
 const VIDEO_BUBBLE_ANCHOR_OFFSET = 35;
 
-export function WorldCanvas({ map, local, remotes, room, cameraActive, mediaVersion, onLocalChange }: WorldCanvasProps) {
+export function WorldCanvas({
+  map,
+  local,
+  remotes,
+  room,
+  cameraActive,
+  mediaVersion,
+  showEditorGrid = false,
+  onLocalChange
+}: WorldCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const localRef = useRef(local);
   const remotesRef = useRef(remotes);
@@ -157,7 +167,19 @@ export function WorldCanvas({ map, local, remotes, room, cameraActive, mediaVers
         smoothRemotes,
         cameraActiveRef.current
       );
-      render(ctx, canvas, size, map, images, localRef.current, smoothRemotes, now, cameraRef.current, videoIdentities);
+      render(
+        ctx,
+        canvas,
+        size,
+        map,
+        images,
+        localRef.current,
+        smoothRemotes,
+        now,
+        cameraRef.current,
+        videoIdentities,
+        showEditorGrid
+      );
 
       if (now - lastEmitRef.current > 70) {
         lastEmitRef.current = now;
@@ -172,7 +194,7 @@ export function WorldCanvas({ map, local, remotes, room, cameraActive, mediaVers
 
     animation = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(animation);
-  }, [images, map, onLocalChange, size]);
+  }, [images, map, onLocalChange, showEditorGrid, size]);
 
   const overlayText = useMemo(() => {
     const zone = getZoneAt(map, local.x, local.y);
@@ -394,7 +416,8 @@ function render(
   remotes: PlayerPresence[],
   now: number,
   camera: CameraState,
-  videoIdentities: Set<string>
+  videoIdentities: Set<string>,
+  showEditorGrid: boolean
 ) {
   const dpr = window.devicePixelRatio || 1;
   const targetWidth = Math.floor(size.width * dpr);
@@ -417,6 +440,57 @@ function render(
     viewportHeight: size.height / camera.zoom,
     videoIdentities
   });
+  if (showEditorGrid) {
+    drawEditorGrid(ctx, map, camera, size, dpr);
+  }
+}
+
+function drawEditorGrid(
+  ctx: CanvasRenderingContext2D,
+  map: OfficeMap,
+  camera: CameraState,
+  size: Size,
+  dpr: number
+) {
+  const viewportW = size.width / camera.zoom;
+  const viewportH = size.height / camera.zoom;
+  const startX = Math.max(0, Math.floor(camera.x / TILE) * TILE);
+  const endX = Math.min(map.width, Math.ceil((camera.x + viewportW) / TILE) * TILE);
+  const startY = Math.max(0, Math.floor(camera.y / TILE) * TILE);
+  const endY = Math.min(map.height, Math.ceil((camera.y + viewportH) / TILE) * TILE);
+  const lineWidth = 1 / Math.max(1, dpr * camera.zoom);
+
+  ctx.save();
+  ctx.translate(-camera.x, -camera.y);
+  ctx.lineWidth = lineWidth;
+
+  ctx.beginPath();
+  ctx.strokeStyle = "rgba(246, 242, 235, 0.18)";
+  for (let x = startX; x <= endX; x += TILE) {
+    ctx.moveTo(x, startY);
+    ctx.lineTo(x, endY);
+  }
+  for (let y = startY; y <= endY; y += TILE) {
+    ctx.moveTo(startX, y);
+    ctx.lineTo(endX, y);
+  }
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.strokeStyle = "rgba(73, 197, 143, 0.34)";
+  for (let x = startX; x <= endX; x += TILE * 4) {
+    ctx.moveTo(x, startY);
+    ctx.lineTo(x, endY);
+  }
+  for (let y = startY; y <= endY; y += TILE * 4) {
+    ctx.moveTo(startX, y);
+    ctx.lineTo(endX, y);
+  }
+  ctx.stroke();
+
+  ctx.strokeStyle = "rgba(73, 197, 143, 0.68)";
+  ctx.strokeRect(0, 0, map.width, map.height);
+  ctx.restore();
 }
 
 function clamp(value: number, min: number, max: number) {

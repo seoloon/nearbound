@@ -1,9 +1,10 @@
-import { LogOut, Maximize2, MessageSquare, PanelRightClose, Send, Settings, X } from "lucide-react";
+import { LogOut, Map as MapIcon, Maximize2, MessageSquare, PanelRightClose, Send, Settings, X } from "lucide-react";
 import { RemoteParticipant, RemoteTrackPublication, Room, Track } from "livekit-client";
 import type { CSSProperties, Dispatch, FormEvent, ReactElement, SetStateAction } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getAudibility, type OfficeMap } from "../game/map";
 import type { ChatMessage, PlayerPresence } from "../types";
+import { MapEditorPanel } from "./MapEditorPanel";
 import { PixelAvatar } from "./PixelAvatar";
 
 interface ChatPanelProps {
@@ -17,8 +18,10 @@ interface ChatPanelProps {
   status: "preview" | "connecting" | "connected" | "error";
   error?: string;
   mediaError?: string;
+  editorOpen: boolean;
   onSendMessage: (text: string) => void;
   onLeave: () => void;
+  onEditorToggle: () => void;
 }
 
 interface NearbyParticipant {
@@ -57,8 +60,10 @@ export function ChatPanel({
   status,
   error,
   mediaError,
+  editorOpen,
   onSendMessage,
-  onLeave
+  onLeave,
+  onEditorToggle
 }: ChatPanelProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [draft, setDraft] = useState("");
@@ -121,6 +126,36 @@ export function ChatPanel({
     />
   );
 
+  if (editorOpen) {
+    return (
+      <>
+        {audioLayer}
+        <MapEditorPanel map={map} onClose={onEditorToggle} />
+        {expandedStream && (
+          <StreamModal
+            publication={expandedStream}
+            mediaVersion={mediaVersion}
+            onClose={() => setExpandedStream(null)}
+          />
+        )}
+        {settingsOpen && (
+          <SettingsModal
+            presences={remotePresenceList}
+            voiceVolumes={voiceVolumes}
+            onVoiceVolumesChange={setVoiceVolumes}
+            onClose={() => setSettingsOpen(false)}
+          />
+        )}
+        <CornerActions
+          editorOpen={editorOpen}
+          onEditorToggle={onEditorToggle}
+          onLeave={onLeave}
+          onSettingsOpen={() => setSettingsOpen(true)}
+        />
+      </>
+    );
+  }
+
   if (collapsed) {
     return (
       <>
@@ -151,7 +186,12 @@ export function ChatPanel({
             onClose={() => setSettingsOpen(false)}
           />
         )}
-        <CornerActions onLeave={onLeave} onSettingsOpen={() => setSettingsOpen(true)} />
+        <CornerActions
+          editorOpen={editorOpen}
+          onEditorToggle={onEditorToggle}
+          onLeave={onLeave}
+          onSettingsOpen={() => setSettingsOpen(true)}
+        />
       </>
     );
   }
@@ -257,20 +297,38 @@ export function ChatPanel({
           onClose={() => setSettingsOpen(false)}
         />
       )}
-      <CornerActions onLeave={onLeave} onSettingsOpen={() => setSettingsOpen(true)} />
+      <CornerActions
+        editorOpen={editorOpen}
+        onEditorToggle={onEditorToggle}
+        onLeave={onLeave}
+        onSettingsOpen={() => setSettingsOpen(true)}
+      />
     </>
   );
 }
 
 function CornerActions({
+  editorOpen,
+  onEditorToggle,
   onLeave,
   onSettingsOpen
 }: {
+  editorOpen: boolean;
+  onEditorToggle: () => void;
   onLeave: () => void;
   onSettingsOpen: () => void;
 }) {
   return (
     <div className="corner-actions">
+      <button
+        className={`corner-action-button ${editorOpen ? "is-active" : ""}`}
+        type="button"
+        onClick={onEditorToggle}
+        aria-label="Map editor"
+        title="Map editor"
+      >
+        <MapIcon size={18} />
+      </button>
       <button className="corner-action-button" type="button" onClick={onSettingsOpen} aria-label="Settings" title="Settings">
         <Settings size={18} />
       </button>

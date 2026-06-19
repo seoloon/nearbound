@@ -20,6 +20,7 @@ export function App() {
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [local, setLocal] = useState<PlayerPresence | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -66,6 +67,7 @@ export function App() {
   }, []);
 
   const handleLeave = useCallback(() => {
+    setEditorOpen(false);
     setSession(null);
     setLocal(null);
   }, []);
@@ -99,6 +101,7 @@ export function App() {
         room={livekit.room}
         cameraActive={livekit.media.camera}
         mediaVersion={livekit.mediaVersion}
+        showEditorGrid={editorOpen}
         onLocalChange={handleLocalChange}
       />
       <LocalScreenPreview room={livekit.room} active={livekit.media.screen} mediaVersion={livekit.mediaVersion} />
@@ -113,8 +116,10 @@ export function App() {
         status={livekit.status}
         error={livekit.error}
         mediaError={livekit.mediaError}
+        editorOpen={editorOpen}
         onSendMessage={(text) => void livekit.sendChat(text)}
         onLeave={handleLeave}
+        onEditorToggle={() => setEditorOpen((value) => !value)}
       />
       <ControlsBar
         connected={connected}
